@@ -1,6 +1,6 @@
 // Import the Firebase libraries as modules from a CDN
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -152,12 +152,38 @@ function applySunscreen(classroom, studentId) {
   });
 }
 
-// Placeholder functions for new buttons
-function saveAsPDF(classroom) {
-  alert(`Generating PDF for ${classroom}...`);
-  // You would add your PDF generation logic here
+// PDF generation function
+async function saveAsPDF(classroom) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const studentsRef = collection(db, classroom);
+  const studentsSnapshot = await getDocs(studentsRef);
+  const studentData = [];
+
+  studentsSnapshot.forEach((doc) => {
+    const student = doc.data();
+    studentData.push([
+      student.name,
+      student.checkedIn ? 'Present' : 'Absent',
+      student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleString() : 'N/A',
+      student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleString() : 'N/A',
+      student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleString() : 'N/A'
+    ]);
+  });
+
+  doc.text(`${classroom.toUpperCase().replace("-", " ")} Attendance Report`, 10, 10);
+  doc.autoTable({
+    head: [['Name', 'Status', 'Last Check In', 'Last Check Out', 'Last Sunscreen']],
+    body: studentData,
+    startY: 20
+  });
+
+  doc.save(`${classroom}-attendance-report.pdf`);
+  alert(`PDF generated for ${classroom}!`);
 }
 
+// Placeholder function for new button
 function resetAllData(classroom) {
   if (confirm(`Are you sure you want to reset all data for ${classroom}? This cannot be undone.`)) {
     alert(`Resetting data for ${classroom}...`);
