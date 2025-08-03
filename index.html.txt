@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Attendance App</title>
+    <link rel="stylesheet" href="style.css" />
+  </head>
+  <body>
+    <header>
+      <h1>Attendance Dashboard</h1>
+      <nav>
+        <button onclick="showPage('home')">Home</button>
+        <button onclick="showPage('classroom1')">Classroom 1</button>
+        <button onclick="showPage('classroom2')">Classroom 2</button>
+        <button onclick="showPage('classroom3')">Classroom 3</button>
+      </nav>
+    </header>
+
+    <main id="content-container"></main>
+
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-app.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/8.6.8/firebase-firestore.js"></script>
+    <script src="firebase-config.js"></script>
+    <script src="script.js"></script>
+  </body>
+</html>
