@@ -1,21 +1,24 @@
-// Import the Firebase libraries and your config
-import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
+// Import the functions you need from the SDKs you need
+import { initializeApp } from "firebase/app";
+import { getAnalytics } from "firebase/analytics";
+// TODO: Add SDKs for Firebase products that you want to use
+// https://firebase.google.com/docs/web/setup#available-libraries
 
-// Your Firebase configuration (copy this from the firebase-config.js file)
+// Your web app's Firebase configuration
+// For Firebase JS SDK v7.20.0 and later, measurementId is optional
 const firebaseConfig = {
-  apiKey: "YOUR_API_KEY",
-  authDomain: "YOUR_AUTH_DOMAIN",
-  projectId: "YOUR_PROJECT_ID",
-  storageBucket: "YOUR_STORAGE_BUCKET",
-  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
-  appId: "YOUR_APP_ID",
+  apiKey: "AIzaSyDDZYW4AQXyCtkB2mUMN-QIsc57ZwjvlsE",
+  authDomain: "attendance-app-1b27e.firebaseapp.com",
+  projectId: "attendance-app-1b27e",
+  storageBucket: "attendance-app-1b27e.firebasestorage.app",
+  messagingSenderId: "1043261702908",
+  appId: "1:1043261702908:web:a29f90f3fb11c47476cd79",
+  measurementId: "G-6M0R6HZH5J"
 };
 
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
-const db = getFirestore(app);
-
+const analytics = getAnalytics(app);
 // The rest of your script.js code remains the same, but with a few minor changes
 // in the way you call the Firestore functions.
 
