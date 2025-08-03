@@ -112,4 +112,103 @@ function renderClassroomPage(classroom) {
         <div class="student-info">
           <h4>${student.name} <span class="status-badge ${student.checkedIn ? 'checked-in' : 'checked-out'}">${student.checkedIn ? 'Present' : 'Absent'}</span></h4>
           <p>Last Check In: ${lastCheckInTimestamp}</p>
-          <p>Last Check Out: ${lastCheckOut
+          <p>Last Check Out: ${lastCheckOutTimestamp}</p>
+          <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
+        </div>
+        <div class="action-buttons">
+          <button onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
+          <button onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
+          <button onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
+        </div>
+      `;
+      studentListDiv.appendChild(studentCard);
+    });
+
+    // Update totals
+    document.getElementById("total-count").textContent = totalStudents;
+    document.getElementById("present-count").textContent = presentStudents;
+    document.getElementById("absent-count").textContent = totalStudents - presentStudents;
+  });
+}
+
+// Firebase functions to update attendance
+function checkIn(classroom, studentId) {
+  updateDoc(doc(db, classroom, studentId), {
+    checkedIn: true,
+    lastCheckIn: serverTimestamp(),
+  });
+}
+
+function checkOut(classroom, studentId) {
+  updateDoc(doc(db, classroom, studentId), {
+    checkedIn: false,
+    lastCheckOut: serverTimestamp(),
+  });
+}
+
+function applySunscreen(classroom, studentId) {
+  updateDoc(doc(db, classroom, studentId), {
+    lastSunscreen: serverTimestamp(),
+  });
+}
+
+// PDF generation function
+async function saveAsPDF(classroom) {
+  const { jsPDF } = window.jspdf;
+  const doc = new jsPDF();
+
+  const studentsRef = collection(db, classroom);
+  const studentsSnapshot = await getDocs(studentsRef);
+  const studentData = [];
+
+  studentsSnapshot.forEach((doc) => {
+    const student = doc.data();
+    studentData.push([
+      student.name,
+      student.checkedIn ? 'Present' : 'Absent',
+      student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : 'N/A',
+      student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : 'N/A',
+      student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString() : 'N/A'
+    ]);
+  });
+
+  doc.text(`${classroom.toUpperCase().replace("-", " ")} Attendance Report`, 10, 10);
+  doc.autoTable({
+    head: [['Name', 'Status', 'Last Check In', 'Last Check Out', 'Last Sunscreen']],
+    body: studentData,
+    startY: 20
+  });
+
+  doc.save(`${classroom}-attendance-report.pdf`);
+  alert(`PDF generated for ${classroom}!`);
+}
+
+// Reset all data function
+async function resetAllData(classroom) {
+  if (confirm(`Are you sure you want to reset all data for ${classroom}? This cannot be undone.`)) {
+    const studentsRef = collection(db, classroom);
+    const studentsSnapshot = await getDocs(studentsRef);
+    
+    // Create a batch of updates to reset all students at once
+    studentsSnapshot.forEach((studentDoc) => {
+      updateDoc(studentDoc.ref, {
+        checkedIn: false,
+        lastCheckIn: null,
+        lastCheckOut: null,
+        lastSunscreen: null,
+      });
+    });
+    alert(`All data for ${classroom} has been reset.`);
+  }
+}
+
+// Initial page load
+showPage("home");
+
+// Expose functions to the global scope for HTML
+window.showPage = showPage;
+window.checkIn = checkIn;
+window.checkOut = checkOut;
+window.applySunscreen = applySunscreen;
+window.saveAsPDF = saveAsPDF;
+window.resetAllData = resetAllData;
