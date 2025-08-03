@@ -100,3 +100,9 @@ function applySunscreen(classroom, studentId) {
 
 // Initial page load
 showPage("home");
+
+// EXPOSE FUNCTIONS TO THE GLOBAL SCOPE FOR HTML
+window.showPage = showPage;
+window.checkIn = checkIn;
+window.checkOut = checkOut;
+window.applySunscreen = applySunscreen;
