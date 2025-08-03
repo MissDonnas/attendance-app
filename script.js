@@ -48,9 +48,36 @@ function renderHomePage() {
 
 // Render a classroom page
 function renderClassroomPage(classroom) {
+  const today = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+
   contentContainer.innerHTML = `
-    <h2>${classroom.toUpperCase().replace("-", " ")}</h2>
-    <input type="text" id="search-bar" placeholder="Search students..." />
+    <div id="info-header">
+      <div id="date-display">${formattedDate}</div>
+      <div class="totals-container">
+        <div class="total-card">
+          <h3 id="total-count">0</h3>
+          <p>Total</p>
+        </div>
+        <div class="total-card">
+          <h3 id="present-count">0</h3>
+          <p>Present</p>
+        </div>
+        <div class="total-card">
+          <h3 id="absent-count">0</h3>
+          <p>Absent</p>
+        </div>
+      </div>
+      <div>
+        <button class="pdf-button" onclick="saveAsPDF('${classroom}')">Save as PDF</button>
+        <button class="reset-button" onclick="resetAllData('${classroom}')">Reset All Data</button>
+      </div>
+    </div>
+    <div id="student-header">
+      <h2>${classroom.toUpperCase().replace("-", " ")}</h2>
+      <input type="text" id="search-bar" placeholder="Search students..." />
+    </div>
     <div id="student-list"></div>
   `;
 
@@ -58,24 +85,49 @@ function renderClassroomPage(classroom) {
   onSnapshot(collection(db, classroom), (snapshot) => {
     const studentListDiv = document.getElementById("student-list");
     studentListDiv.innerHTML = ""; // Clear list before re-rendering
+
+    let totalStudents = 0;
+    let presentStudents = 0;
+    
     snapshot.forEach((doc) => {
       const student = doc.data();
       const studentId = doc.id;
-      const studentDiv = document.createElement("div");
+      totalStudents++;
+      if (student.checkedIn) presentStudents++;
 
-      const lastUpdatedTimestamp = student.lastUpdated
-        ? new Date(student.lastUpdated.seconds * 1000).toLocaleString()
+      const lastCheckInTimestamp = student.lastCheckIn
+        ? new Date(student.lastCheckIn.seconds * 1000).toLocaleString()
+        : "Never";
+      const lastCheckOutTimestamp = student.lastCheckOut
+        ? new Date(student.lastCheckOut.seconds * 1000).toLocaleString()
+        : "Never";
+      const lastSunscreenTimestamp = student.lastSunscreen
+        ? new Date(student.lastSunscreen.seconds * 1000).toLocaleString()
         : "Never";
 
-      studentDiv.innerHTML = `
-        <p>${student.name} - Status: ${student.checkedIn ? "Checked In" : "Checked Out"}</p>
-        <p>Last Updated: ${lastUpdatedTimestamp}</p>
-        <button onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
-        <button onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
-        <button onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
+      const studentCard = document.createElement("div");
+      studentCard.className = "student-card";
+
+      studentCard.innerHTML = `
+        <div class="student-info">
+          <h4>${student.name} <span class="status-badge ${student.checkedIn ? 'checked-in' : 'checked-out'}">${student.checkedIn ? 'Present' : 'Absent'}</span></h4>
+          <p>Last Check In: ${lastCheckInTimestamp}</p>
+          <p>Last Check Out: ${lastCheckOutTimestamp}</p>
+          <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
+        </div>
+        <div class="action-buttons">
+          <button onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
+          <button onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
+          <button onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
+        </div>
       `;
-      studentListDiv.appendChild(studentDiv);
+      studentListDiv.appendChild(studentCard);
     });
+
+    // Update totals
+    document.getElementById("total-count").textContent = totalStudents;
+    document.getElementById("present-count").textContent = presentStudents;
+    document.getElementById("absent-count").textContent = totalStudents - presentStudents;
   });
 }
 
@@ -83,26 +135,43 @@ function renderClassroomPage(classroom) {
 function checkIn(classroom, studentId) {
   updateDoc(doc(db, classroom, studentId), {
     checkedIn: true,
-    lastUpdated: serverTimestamp(),
+    lastCheckIn: serverTimestamp(),
   });
 }
 
 function checkOut(classroom, studentId) {
   updateDoc(doc(db, classroom, studentId), {
     checkedIn: false,
-    lastUpdated: serverTimestamp(),
+    lastCheckOut: serverTimestamp(),
   });
 }
 
 function applySunscreen(classroom, studentId) {
-  alert(`Sunscreen applied for ${studentId} in ${classroom}`);
+  updateDoc(doc(db, classroom, studentId), {
+    lastSunscreen: serverTimestamp(),
+  });
+}
+
+// Placeholder functions for new buttons
+function saveAsPDF(classroom) {
+  alert(`Generating PDF for ${classroom}...`);
+  // You would add your PDF generation logic here
+}
+
+function resetAllData(classroom) {
+  if (confirm(`Are you sure you want to reset all data for ${classroom}? This cannot be undone.`)) {
+    alert(`Resetting data for ${classroom}...`);
+    // You would add your data reset logic here
+  }
 }
 
 // Initial page load
 showPage("home");
 
-// EXPOSE FUNCTIONS TO THE GLOBAL SCOPE FOR HTML
+// Expose functions to the global scope for HTML
 window.showPage = showPage;
 window.checkIn = checkIn;
 window.checkOut = checkOut;
 window.applySunscreen = applySunscreen;
+window.saveAsPDF = saveAsPDF;
+window.resetAllData = resetAllData;
