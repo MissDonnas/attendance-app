@@ -1,43 +1,187 @@
 body {
-  font-family: sans-serif;
+  font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
   margin: 0;
   padding: 0;
-  background-color: #f4f4f4;
+  background-color: #f7f9fc;
+  color: #333;
 }
 
 header {
-  background-color: #333;
+  background-color: #007bff;
   color: #fff;
-  padding: 1rem;
+  padding: 1rem 2rem;
   text-align: center;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+header h1 {
+  margin-bottom: 10px;
 }
 
 nav button {
-  background-color: #555;
+  background-color: #0056b3;
   color: #fff;
   border: none;
-  padding: 10px 15px;
+  padding: 10px 20px;
   margin: 0 5px;
   cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+nav button:hover {
+  background-color: #004085;
 }
 
 main {
   padding: 2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
 }
 
-#student-list div {
-  background-color: #fff;
-  margin-bottom: 10px;
-  padding: 1rem;
-  border-radius: 5px;
+#info-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+#date-display {
+  font-size: 1.2rem;
+  font-weight: 600;
+  color: #555;
+}
+
+.totals-container {
+  display: flex;
+  gap: 15px;
+}
+
+.total-card {
+  background-color: #fff;
+  padding: 15px 25px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  text-align: center;
+  font-size: 1rem;
+}
+
+.total-card h3 {
+  margin: 0;
+  font-size: 2rem;
+}
+
+.total-card p {
+  margin: 5px 0 0;
+  color: #666;
+}
+
+.reset-button,
+.pdf-button {
+  background-color: #dc3545;
+  color: #fff;
+  border: none;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-radius: 5px;
+  transition: background-color 0.3s ease;
+}
+
+.pdf-button {
+  background-color: #28a745;
+}
+
+.reset-button:hover {
+  background-color: #c82333;
+}
+
+.pdf-button:hover {
+  background-color: #218838;
+}
+
+#student-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 20px;
+}
+
+#student-header h2 {
+  margin: 0;
 }
 
 #search-bar {
-  width: 100%;
   padding: 10px;
-  margin-bottom: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  font-size: 1rem;
   box-sizing: border-box;
+}
+
+#student-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.student-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 15px;
+}
+
+.student-info h4 {
+  margin: 0 0 5px 0;
+  font-size: 1.2rem;
+}
+
+.student-info p {
+  margin: 0;
+  color: #777;
+  font-size: 0.9rem;
+}
+
+.status-badge {
+  padding: 5px 10px;
+  border-radius: 12px;
+  font-weight: bold;
+  font-size: 0.8rem;
+}
+
+.status-badge.checked-in {
+  background-color: #28a745;
+  color: #fff;
+}
+
+.status-badge.checked-out {
+  background-color: #dc3545;
+  color: #fff;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+.action-buttons button {
+  background-color: #007bff;
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+.action-buttons button:hover {
+  background-color: #0056b3;
 }
