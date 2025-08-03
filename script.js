@@ -18,6 +18,17 @@ const db = getFirestore(app);
 
 const contentContainer = document.getElementById("content-container");
 
+// Helper function to check if a student is scheduled for today
+function isScheduledToday(studentSchedule) {
+  if (!studentSchedule || studentSchedule.length === 0) {
+    // If no schedule is set, assume they are scheduled every day
+    return true;
+  }
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = daysOfWeek[new Date().getDay()];
+  return studentSchedule.includes(today);
+}
+
 // Function to render a specific page
 function showPage(pageName) {
   contentContainer.innerHTML = ""; // Clear current content
@@ -92,9 +103,16 @@ function renderClassroomPage(classroom) {
     snapshot.forEach((doc) => {
       const student = doc.data();
       const studentId = doc.id;
-      totalStudents++;
-      if (student.checkedIn) presentStudents++;
-
+      
+      const isScheduled = isScheduledToday(student.schedule);
+      const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
+      const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
+      
+      if(isScheduled){
+        totalStudents++;
+        if(student.checkedIn) presentStudents++;
+      }
+      
       const lastCheckInTimestamp = student.lastCheckIn
         ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
         : "Never";
@@ -110,7 +128,7 @@ function renderClassroomPage(classroom) {
 
       studentCard.innerHTML = `
         <div class="student-info">
-          <h4>${student.name} <span class="status-badge ${student.checkedIn ? 'checked-in' : 'checked-out'}">${student.checkedIn ? 'Present' : 'Absent'}</span></h4>
+          <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
           <p>Last Check In: ${lastCheckInTimestamp}</p>
           <p>Last Check Out: ${lastCheckOutTimestamp}</p>
           <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
