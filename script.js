@@ -1,3 +1,24 @@
+// Import the Firebase libraries and your config
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
+
+// Your Firebase configuration (copy this from the firebase-config.js file)
+const firebaseConfig = {
+  apiKey: "YOUR_API_KEY",
+  authDomain: "YOUR_AUTH_DOMAIN",
+  projectId: "YOUR_PROJECT_ID",
+  storageBucket: "YOUR_STORAGE_BUCKET",
+  messagingSenderId: "YOUR_MESSAGING_SENDER_ID",
+  appId: "YOUR_APP_ID",
+};
+
+// Initialize Firebase
+const app = initializeApp(firebaseConfig);
+const db = getFirestore(app);
+
+// The rest of your script.js code remains the same, but with a few minor changes
+// in the way you call the Firestore functions.
+
 const contentContainer = document.getElementById("content-container");
 
 // Function to render a specific page
@@ -29,7 +50,6 @@ function renderHomePage() {
 }
 
 // Render a classroom page
-// Render a classroom page
 function renderClassroomPage(classroom) {
   contentContainer.innerHTML = `
     <h2>${classroom.toUpperCase().replace("-", " ")}</h2>
@@ -38,7 +58,7 @@ function renderClassroomPage(classroom) {
   `;
 
   // Fetch student data from Firebase
-  db.collection(classroom).onSnapshot((snapshot) => {
+  onSnapshot(collection(db, classroom), (snapshot) => {
     const studentListDiv = document.getElementById("student-list");
     studentListDiv.innerHTML = ""; // Clear list before re-rendering
     snapshot.forEach((doc) => {
@@ -65,37 +85,28 @@ function renderClassroomPage(classroom) {
 
 // Firebase functions to update attendance
 function checkIn(classroom, studentId) {
-  db.collection(classroom).doc(studentId).update({
+  updateDoc(doc(db, classroom, studentId), {
     checkedIn: true,
-    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+    lastUpdated: serverTimestamp(),
   });
 }
 
 function checkOut(classroom, studentId) {
-  db.collection(classroom).doc(studentId).update({
+  updateDoc(doc(db, classroom, studentId), {
     checkedIn: false,
-    lastUpdated: firebase.firestore.FieldValue.serverTimestamp(),
+    lastUpdated: serverTimestamp(),
   });
 }
 
 function applySunscreen(classroom, studentId) {
-  // We can add more logic here, like a timestamp for when sunscreen was applied
   alert(`Sunscreen applied for ${studentId} in ${classroom}`);
 }
 
 // Initial page load
 showPage("home");
 
-// You'll need to add a way to populate the initial data in Firebase.
-// For example, you can have an admin page or manually add students
-// to your Firestore collections (e.g., 'classroom1', 'classroom2', 'classroom3')
-// with a 'name' and 'checkedIn' field.
-
-// Also, implement the search functionality here
 document.addEventListener("input", (e) => {
   if (e.target.id === "search-bar") {
-    // Logic to filter the student list based on the search query
-    // This will involve iterating through the student list and hiding/showing
-    // based on the search input.
+    // Search logic here
   }
 });
