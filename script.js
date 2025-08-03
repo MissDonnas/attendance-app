@@ -19,8 +19,6 @@ const firebaseConfig = {
 // Initialize Firebase
 const app = initializeApp(firebaseConfig);
 const analytics = getAnalytics(app);
-// The rest of your script.js code remains the same, but with a few minor changes
-// in the way you call the Firestore functions.
 
 const contentContainer = document.getElementById("content-container");
 
@@ -69,7 +67,6 @@ function renderClassroomPage(classroom) {
       const studentId = doc.id;
       const studentDiv = document.createElement("div");
 
-      // Check if lastUpdated exists and format it
       const lastUpdatedTimestamp = student.lastUpdated
         ? new Date(student.lastUpdated.seconds * 1000).toLocaleString()
         : "Never";
@@ -107,9 +104,3 @@ function applySunscreen(classroom, studentId) {
 
 // Initial page load
 showPage("home");
-
-document.addEventListener("input", (e) => {
-  if (e.target.id === "search-bar") {
-    // Search logic here
-  }
-});
