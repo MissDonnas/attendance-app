@@ -34,8 +34,11 @@ function showPage(pageName) {
   contentContainer.innerHTML = ""; // Clear current content
 
   switch (pageName) {
-    case "home":
-      renderHomePage();
+    case "beforecare":
+      renderClassroomPage("beforecare");
+      break;
+    case "aftercare":
+      renderClassroomPage("aftercare");
       break;
     case "classroom1":
       renderClassroomPage("classroom1");
@@ -46,15 +49,11 @@ function showPage(pageName) {
     case "classroom3":
       renderClassroomPage("classroom3");
       break;
+    default:
+        // Set a default page if the homepage is removed
+        renderClassroomPage("beforecare");
+        break;
   }
-}
-
-// Render the homepage
-function renderHomePage() {
-  contentContainer.innerHTML = `
-    <h2>Welcome to the Attendance Dashboard!</h2>
-    <p>Use the navigation above to view and manage attendance for each classroom.</p>
-  `;
 }
 
 // Render a classroom page
@@ -220,8 +219,8 @@ async function resetAllData(classroom) {
   }
 }
 
-// Initial page load
-showPage("home");
+// Initial page load, now defaults to beforecare
+showPage("beforecare");
 
 // Expose functions to the global scope for HTML
 window.showPage = showPage;
