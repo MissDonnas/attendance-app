@@ -34,11 +34,8 @@ function showPage(pageName) {
   contentContainer.innerHTML = ""; // Clear current content
 
   switch (pageName) {
-    case "beforecare":
-      renderClassroomPage("beforecare");
-      break;
-    case "aftercare":
-      renderClassroomPage("aftercare");
+    case "daycare":
+      renderClassroomPage("daycare");
       break;
     case "classroom1":
       renderClassroomPage("classroom1");
@@ -50,8 +47,8 @@ function showPage(pageName) {
       renderClassroomPage("classroom3");
       break;
     default:
-        // Set a default page if the homepage is removed
-        renderClassroomPage("beforecare");
+        // Set a default page
+        renderClassroomPage("daycare");
         break;
   }
 }
@@ -219,8 +216,8 @@ async function resetAllData(classroom) {
   }
 }
 
-// Initial page load, now defaults to beforecare
-showPage("beforecare");
+// Initial page load, now defaults to daycare
+showPage("daycare");
 
 // Expose functions to the global scope for HTML
 window.showPage = showPage;
