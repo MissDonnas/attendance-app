@@ -167,26 +167,5 @@ main {
   color: #fff;
 }
 
-.action-buttons {
-  display: flex;
-  gap: 10px;
-}
-
-.action-buttons button {
-  background-color: #007bff;
-  color: #fff;
-  border: none;
-  padding: 8px 12px;
-  border-radius: 5px;
-  cursor: pointer;
-  transition: background-color 0.3s ease;
-}
-
-.action-buttons button:hover {
-  background-color: #0056b3;
-}
-
 .status-badge.not-scheduled {
-  background-color: #6c757d;
-  color: #fff;
-}
+  background-color: #6c
