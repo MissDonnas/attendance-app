@@ -133,9 +133,9 @@ function renderClassroomPage(classroom) {
           <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
         </div>
         <div class="action-buttons">
-          <button onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
-          <button onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
-          <button onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
+          <button class="check-in-button" onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
+          <button class="check-out-button" onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
+          <button class="sunscreen-button" onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
         </div>
       `;
       studentListDiv.appendChild(studentCard);
