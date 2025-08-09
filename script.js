@@ -55,7 +55,7 @@ function showPage(pageName) {
   }
 }
 
-// Function to filter and display students
+// Function to filter and display students and update counts
 function displayStudents(students, classroom, searchTerm = '') {
   const studentListDiv = document.getElementById("student-list");
   studentListDiv.innerHTML = "";
@@ -64,23 +64,23 @@ function displayStudents(students, classroom, searchTerm = '') {
     studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
-  let totalStudents = 0;
-  let presentStudents = 0;
-  let absentStudents = 0;
+  let totalCount = 0;
+  let presentCount = 0;
+  let absentCount = 0;
 
   filteredStudents.forEach(({ student, studentId }) => {
+    // These counts are for all students displayed
+    totalCount++; 
+    if (student.checkedIn) {
+      presentCount++;
+    } else {
+      absentCount++;
+    }
+
+    // Determine status for individual student display (still considers schedule)
     const isScheduled = isScheduledToday(student.schedule);
     const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
     const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
-    
-    if(isScheduled){
-      totalStudents++;
-      if(student.checkedIn) {
-        presentStudents++;
-      } else {
-        absentStudents++;
-      }
-    }
     
     const lastCheckInTimestamp = student.lastCheckIn
       ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
@@ -111,9 +111,9 @@ function displayStudents(students, classroom, searchTerm = '') {
     studentListDiv.appendChild(studentCard);
   });
 
-  document.getElementById("total-count").textContent = totalStudents;
-  document.getElementById("present-count").textContent = presentStudents;
-  document.getElementById("absent-count").textContent = absentStudents;
+  document.getElementById("total-count").textContent = totalCount;
+  document.getElementById("present-count").textContent = presentCount;
+  document.getElementById("absent-count").textContent = absentCount;
 }
 
 // Render a classroom page
