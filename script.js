@@ -19,7 +19,7 @@ const db = getFirestore(app);
 const contentContainer = document.getElementById("content-container");
 
 // Helper function to check if a student is scheduled for today
-function isScheduledToday(studentSchedule, studentName) {
+function isScheduledToday(studentSchedule) {
   // If not an array or an empty array, assume they are scheduled full time
   if (!Array.isArray(studentSchedule) || studentSchedule.length === 0) {
     return true;
@@ -34,13 +34,6 @@ function isScheduledToday(studentSchedule, studentName) {
     }
     return '';
   }).filter(Boolean);
-
-  // LOGGING FOR DEBUGGING
-  console.log(`--- DEBUGGING SCHEDULE for ${studentName} ---`);
-  console.log(`Current Day: '${today.toLowerCase()}'`);
-  console.log(`Student's Schedule (normalized):`, lowerCaseSchedule);
-  console.log(`Is scheduled today?`, lowerCaseSchedule.includes(today.toLowerCase()));
-  console.log(`----------------------------------------`);
 
   return lowerCaseSchedule.includes(today.toLowerCase());
 }
@@ -94,7 +87,7 @@ function displayStudents(students, classroom, searchTerm = '') {
     }
 
     // Determine status for individual student display (still considers schedule)
-    const isScheduled = isScheduledToday(student.schedule, student.name);
+    const isScheduled = isScheduledToday(student.schedule);
     const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
     const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
     
@@ -282,7 +275,7 @@ async function saveAllAsPDF() {
 
     studentsSnapshot.forEach((doc) => {
       const student = doc.data();
-      const isScheduled = isScheduledToday(student.schedule, student.name);
+      const isScheduled = isScheduledToday(student.schedule);
       const status = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
       
       studentData.push([
