@@ -26,7 +26,10 @@ function isScheduledToday(studentSchedule) {
   }
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
-  return studentSchedule.includes(today);
+
+  // Normalize both the schedule and today's day to lowercase for a case-insensitive check
+  const lowerCaseSchedule = studentSchedule.map(day => day.toLowerCase());
+  return lowerCaseSchedule.includes(today.toLowerCase());
 }
 
 // Function to render a specific page
