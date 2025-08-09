@@ -212,3 +212,34 @@ main {
 .sunscreen-button:hover {
   background-color: #e0a800;
 }
+
+/* New styles for Past Attendance page */
+.report-card {
+  background-color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  margin-bottom: 20px;
+}
+
+.report-header h3 {
+  margin-top: 0;
+  border-bottom: 1px solid #eee;
+  padding-bottom: 10px;
+}
+
+.report-content h4 {
+  margin-top: 20px;
+  margin-bottom: 5px;
+}
+
+.report-content ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.report-content li {
+  padding: 5px 0;
+  border-bottom: 1px dashed #eee;
+}
