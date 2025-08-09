@@ -1,6 +1,6 @@
 // Import the Firebase libraries as modules from a CDN
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -21,7 +21,6 @@ const contentContainer = document.getElementById("content-container");
 // Helper function to check if a student is scheduled for today
 function isScheduledToday(studentSchedule) {
   if (!studentSchedule || studentSchedule.length === 0) {
-    // If no schedule is set, assume they are scheduled every day
     return true;
   }
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
@@ -31,7 +30,7 @@ function isScheduledToday(studentSchedule) {
 
 // Function to render a specific page
 function showPage(pageName) {
-  contentContainer.innerHTML = ""; // Clear current content
+  contentContainer.innerHTML = "";
 
   switch (pageName) {
     case "daycare":
@@ -46,10 +45,12 @@ function showPage(pageName) {
     case "classroom3":
       renderClassroomPage("classroom3");
       break;
+    case "pastattendance":
+      renderPastAttendancePage();
+      break;
     default:
-        // Set a default page
-        renderClassroomPage("daycare");
-        break;
+      renderClassroomPage("daycare");
+      break;
   }
 }
 
@@ -90,7 +91,7 @@ function renderClassroomPage(classroom) {
   // Fetch student data from Firebase
   onSnapshot(collection(db, classroom), (snapshot) => {
     const studentListDiv = document.getElementById("student-list");
-    studentListDiv.innerHTML = ""; // Clear list before re-rendering
+    studentListDiv.innerHTML = "";
 
     let totalStudents = 0;
     let presentStudents = 0;
@@ -144,6 +145,53 @@ function renderClassroomPage(classroom) {
   });
 }
 
+// New function to render the Past Attendance page
+function renderPastAttendancePage() {
+  contentContainer.innerHTML = `
+    <h2>Past Attendance Records</h2>
+    <div id="past-attendance-list"></div>
+  `;
+
+  // Listen for changes in the attendanceHistory collection
+  onSnapshot(collection(db, "attendanceHistory"), (snapshot) => {
+    const listDiv = document.getElementById("past-attendance-list");
+    listDiv.innerHTML = "";
+
+    snapshot.forEach((doc) => {
+      const report = doc.data();
+      const reportId = doc.id;
+      const reportDate = new Date(report.timestamp.seconds * 1000).toLocaleDateString();
+
+      const reportCard = document.createElement("div");
+      reportCard.className = "report-card";
+      reportCard.innerHTML = `
+        <div class="report-header">
+          <h3>Attendance Report for ${reportDate}</h3>
+        </div>
+        <div class="report-content">
+          <h4>Daycare</h4>
+          <ul>
+            ${report.daycare.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+          </ul>
+          <h4>Classroom 1</h4>
+          <ul>
+            ${report.classroom1.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+          </ul>
+          <h4>Classroom 2</h4>
+          <ul>
+            ${report.classroom2.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+          </ul>
+          <h4>Classroom 3</h4>
+          <ul>
+            ${report.classroom3.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+          </ul>
+        </div>
+      `;
+      listDiv.appendChild(reportCard);
+    });
+  });
+}
+
 // Firebase functions to update attendance
 function checkIn(classroom, studentId) {
   updateDoc(doc(db, classroom, studentId), {
@@ -165,12 +213,13 @@ function applySunscreen(classroom, studentId) {
   });
 }
 
-// PDF generation function for all pages
+// New function to save PDF and to Firebase
 async function saveAllAsPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
   const pages = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
   let isFirstPage = true;
+  const attendanceDataToSave = {};
 
   for (const pageName of pages) {
     if (!isFirstPage) {
@@ -180,18 +229,30 @@ async function saveAllAsPDF() {
     const studentsRef = collection(db, pageName);
     const studentsSnapshot = await getDocs(studentsRef);
     const studentData = [];
+    const attendanceRecords = [];
 
     studentsSnapshot.forEach((doc) => {
       const student = doc.data();
+      const isScheduled = isScheduledToday(student.schedule);
+      const status = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
+      
       studentData.push([
         student.name,
-        student.checkedIn ? 'Present' : 'Absent',
+        status,
         student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : 'N/A',
         student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : 'N/A',
         student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString() : 'N/A'
       ]);
+
+      // Add to attendance records for Firebase
+      attendanceRecords.push({
+        name: student.name,
+        status: status
+      });
     });
 
+    attendanceDataToSave[pageName] = attendanceRecords;
+    
     const pageTitle = `${pageName.toUpperCase().replace("-", " ")} Attendance Report`;
     doc.text(pageTitle, 10, 10);
     doc.autoTable({
@@ -202,9 +263,15 @@ async function saveAllAsPDF() {
     
     isFirstPage = false;
   }
+  
+  // Save the attendance data to the new Firestore collection
+  await addDoc(collection(db, "attendanceHistory"), {
+    ...attendanceDataToSave,
+    timestamp: serverTimestamp()
+  });
 
   doc.save(`all-attendance-report.pdf`);
-  alert('All attendance reports saved as one PDF!');
+  alert('All attendance reports saved as one PDF and to attendance history!');
 }
 
 // Reset all data function
@@ -213,7 +280,6 @@ async function resetAllData(classroom) {
     const studentsRef = collection(db, classroom);
     const studentsSnapshot = await getDocs(studentsRef);
     
-    // Create a batch of updates to reset all students at once
     studentsSnapshot.forEach((studentDoc) => {
       updateDoc(studentDoc.ref, {
         checkedIn: false,
