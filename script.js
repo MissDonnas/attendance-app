@@ -1,6 +1,6 @@
-// No more import statements, as libraries are loaded via HTML script tags
-const { initializeApp } = firebase;
-const { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc } = firebase.firestore;
+// Import the Firebase libraries as modules from a CDN
+import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -307,6 +307,14 @@ async function resetAllData(classroom) {
     alert(`All data for ${classroom} has been reset.`);
   }
 }
+
+// This makes the functions available to the HTML's onclick attributes
+window.showPage = showPage;
+window.checkIn = checkIn;
+window.checkOut = checkOut;
+window.applySunscreen = applySunscreen;
+window.saveAllAsPDF = saveAllAsPDF;
+window.resetAllData = resetAllData;
 
 // Initial page load, now defaults to daycare
 showPage("daycare");
