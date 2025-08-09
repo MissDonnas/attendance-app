@@ -77,7 +77,6 @@ function renderClassroomPage(classroom) {
         </div>
       </div>
       <div>
-        <button class="pdf-button" onclick="saveAsPDF('${classroom}')">Save as PDF</button>
         <button class="reset-button" onclick="resetAllData('${classroom}')">Reset All Data</button>
       </div>
     </div>
@@ -166,35 +165,46 @@ function applySunscreen(classroom, studentId) {
   });
 }
 
-// PDF generation function
-async function saveAsPDF(classroom) {
+// PDF generation function for all pages
+async function saveAllAsPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
+  const pages = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
+  let isFirstPage = true;
 
-  const studentsRef = collection(db, classroom);
-  const studentsSnapshot = await getDocs(studentsRef);
-  const studentData = [];
+  for (const pageName of pages) {
+    if (!isFirstPage) {
+      doc.addPage();
+    }
+    
+    const studentsRef = collection(db, pageName);
+    const studentsSnapshot = await getDocs(studentsRef);
+    const studentData = [];
 
-  studentsSnapshot.forEach((doc) => {
-    const student = doc.data();
-    studentData.push([
-      student.name,
-      student.checkedIn ? 'Present' : 'Absent',
-      student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : 'N/A',
-      student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : 'N/A',
-      student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString() : 'N/A'
-    ]);
-  });
+    studentsSnapshot.forEach((doc) => {
+      const student = doc.data();
+      studentData.push([
+        student.name,
+        student.checkedIn ? 'Present' : 'Absent',
+        student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : 'N/A',
+        student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : 'N/A',
+        student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString() : 'N/A'
+      ]);
+    });
 
-  doc.text(`${classroom.toUpperCase().replace("-", " ")} Attendance Report`, 10, 10);
-  doc.autoTable({
-    head: [['Name', 'Status', 'Last Check In', 'Last Check Out', 'Last Sunscreen']],
-    body: studentData,
-    startY: 20
-  });
+    const pageTitle = `${pageName.toUpperCase().replace("-", " ")} Attendance Report`;
+    doc.text(pageTitle, 10, 10);
+    doc.autoTable({
+      head: [['Name', 'Status', 'Last Check In', 'Last Check Out', 'Last Sunscreen']],
+      body: studentData,
+      startY: 20
+    });
+    
+    isFirstPage = false;
+  }
 
-  doc.save(`${classroom}-attendance-report.pdf`);
-  alert(`PDF generated for ${classroom}!`);
+  doc.save(`all-attendance-report.pdf`);
+  alert('All attendance reports saved as one PDF!');
 }
 
 // Reset all data function
@@ -224,5 +234,5 @@ window.showPage = showPage;
 window.checkIn = checkIn;
 window.checkOut = checkOut;
 window.applySunscreen = applySunscreen;
-window.saveAsPDF = saveAsPDF;
+window.saveAllAsPDF = saveAllAsPDF;
 window.resetAllData = resetAllData;
