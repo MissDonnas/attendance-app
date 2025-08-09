@@ -4,7 +4,7 @@ import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, 
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyDDZYW4AQXyCtkB2mUMN-QIsc57ZwjvlsE",
+  apiKey: "AIzaSyDDZYW4AQXyCtkB2mUMN-QIsc577ZwjvlsE",
   authDomain: "attendance-app-1b27e.firebaseapp.com",
   projectId: "attendance-app-1b27e",
   storageBucket: "attendance-app-1b27e.firebasestorage.app",
@@ -55,6 +55,67 @@ function showPage(pageName) {
   }
 }
 
+// Function to filter and display students
+function displayStudents(students, searchTerm = '') {
+  const studentListDiv = document.getElementById("student-list");
+  studentListDiv.innerHTML = "";
+
+  const filteredStudents = students.filter(student =>
+    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
+
+  let totalStudents = 0;
+  let presentStudents = 0;
+  let absentStudents = 0;
+
+  filteredStudents.forEach(({ student, studentId }) => {
+    const isScheduled = isScheduledToday(student.schedule);
+    const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
+    const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
+    
+    if(isScheduled){
+      totalStudents++;
+      if(student.checkedIn) {
+        presentStudents++;
+      } else {
+        absentStudents++;
+      }
+    }
+    
+    const lastCheckInTimestamp = student.lastCheckIn
+      ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
+      : "Never";
+    const lastCheckOutTimestamp = student.lastCheckOut
+      ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString()
+      : "Never";
+    const lastSunscreenTimestamp = student.lastSunscreen
+      ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString()
+      : "Never";
+
+    const studentCard = document.createElement("div");
+    studentCard.className = "student-card";
+
+    studentCard.innerHTML = `
+      <div class="student-info">
+        <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
+        <p>Last Check In: ${lastCheckInTimestamp}</p>
+        <p>Last Check Out: ${lastCheckOutTimestamp}</p>
+        <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
+      </div>
+      <div class="action-buttons">
+        <button class="check-in-button" onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
+        <button class="check-out-button" onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
+        <button class="sunscreen-button" onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
+      </div>
+    `;
+    studentListDiv.appendChild(studentCard);
+  });
+
+  document.getElementById("total-count").textContent = totalStudents;
+  document.getElementById("present-count").textContent = presentStudents;
+  document.getElementById("absent-count").textContent = absentStudents;
+}
+
 // Render a classroom page
 function renderClassroomPage(classroom) {
   const today = new Date();
@@ -91,63 +152,19 @@ function renderClassroomPage(classroom) {
 
   // Fetch student data from Firebase
   onSnapshot(collection(db, classroom), (snapshot) => {
-    const studentListDiv = document.getElementById("student-list");
-    studentListDiv.innerHTML = "";
-
-    let totalStudents = 0;
-    let presentStudents = 0;
-    let absentStudents = 0;
-    
+    const allStudents = [];
     snapshot.forEach((doc) => {
-      const student = doc.data();
-      const studentId = doc.id;
-      
-      const isScheduled = isScheduledToday(student.schedule);
-      const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
-      const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
-      
-      if(isScheduled){
-        totalStudents++;
-        if(student.checkedIn) {
-          presentStudents++;
-        } else {
-          absentStudents++;
-        }
-      }
-      
-      const lastCheckInTimestamp = student.lastCheckIn
-        ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
-        : "Never";
-      const lastCheckOutTimestamp = student.lastCheckOut
-        ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString()
-        : "Never";
-      const lastSunscreenTimestamp = student.lastSunscreen
-        ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString()
-        : "Never";
-
-      const studentCard = document.createElement("div");
-      studentCard.className = "student-card";
-
-      studentCard.innerHTML = `
-        <div class="student-info">
-          <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
-          <p>Last Check In: ${lastCheckInTimestamp}</p>
-          <p>Last Check Out: ${lastCheckOutTimestamp}</p>
-          <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
-        </div>
-        <div class="action-buttons">
-          <button class="check-in-button" onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
-          <button class="check-out-button" onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
-          <button class="sunscreen-button" onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
-        </div>
-      `;
-      studentListDiv.appendChild(studentCard);
+      allStudents.push({ student: doc.data(), studentId: doc.id });
     });
+    
+    // Initial display of all students
+    displayStudents(allStudents);
 
-    // Update totals
-    document.getElementById("total-count").textContent = totalStudents;
-    document.getElementById("present-count").textContent = presentStudents;
-    document.getElementById("absent-count").textContent = absentStudents;
+    // Add search functionality
+    const searchBar = document.getElementById("search-bar");
+    searchBar.addEventListener("input", (e) => {
+      displayStudents(allStudents, e.target.value);
+    });
   });
 }
 
