@@ -27,8 +27,9 @@ function isScheduledToday(studentSchedule) {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
 
-  // Normalize both the schedule and today's day to lowercase for a case-insensitive check
-  const lowerCaseSchedule = studentSchedule.map(day => day.toLowerCase());
+  // Normalize by trimming whitespace and converting to lowercase
+  const lowerCaseSchedule = studentSchedule.map(day => day.trim().toLowerCase());
+
   return lowerCaseSchedule.includes(today.toLowerCase());
 }
 
