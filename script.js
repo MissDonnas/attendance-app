@@ -307,6 +307,24 @@ async function saveAllAsPDF() {
   alert('All attendance reports saved as one PDF and to attendance history!');
 }
 
+// Reset all data function
+async function resetAllData(classroom) {
+  if (confirm(`Are you sure you want to reset all data for ${classroom}? This cannot be undone.`)) {
+    const studentsRef = collection(db, classroom);
+    const studentsSnapshot = await getDocs(studentsRef);
+    
+    studentsSnapshot.forEach((studentDoc) => {
+      updateDoc(studentDoc.ref, {
+        checkedIn: false,
+        lastCheckIn: null,
+        lastCheckOut: null,
+        lastSunscreen: null,
+      });
+    });
+    alert(`All data for ${classroom} has been reset.`);
+  }
+}
+
 // This makes the functions available to the HTML's onclick attributes
 window.showPage = showPage;
 window.checkIn = checkIn;
