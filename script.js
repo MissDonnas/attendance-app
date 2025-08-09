@@ -20,7 +20,8 @@ const contentContainer = document.getElementById("content-container");
 
 // Helper function to check if a student is scheduled for today
 function isScheduledToday(studentSchedule) {
-  if (!studentSchedule || studentSchedule.length === 0) {
+  // Check if studentSchedule is an array. If not, or if it's empty, assume they are scheduled every day.
+  if (!Array.isArray(studentSchedule) || studentSchedule.length === 0) {
     return true;
   }
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
