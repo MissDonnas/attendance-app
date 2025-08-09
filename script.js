@@ -95,6 +95,7 @@ function renderClassroomPage(classroom) {
 
     let totalStudents = 0;
     let presentStudents = 0;
+    let absentStudents = 0;
     
     snapshot.forEach((doc) => {
       const student = doc.data();
@@ -106,7 +107,11 @@ function renderClassroomPage(classroom) {
       
       if(isScheduled){
         totalStudents++;
-        if(student.checkedIn) presentStudents++;
+        if(student.checkedIn) {
+          presentStudents++;
+        } else {
+          absentStudents++;
+        }
       }
       
       const lastCheckInTimestamp = student.lastCheckIn
@@ -141,11 +146,11 @@ function renderClassroomPage(classroom) {
     // Update totals
     document.getElementById("total-count").textContent = totalStudents;
     document.getElementById("present-count").textContent = presentStudents;
-    document.getElementById("absent-count").textContent = totalStudents - presentStudents;
+    document.getElementById("absent-count").textContent = absentStudents;
   });
 }
 
-// Updated function to render the Past Attendance page with expandable cards
+// New function to render the Past Attendance page
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
     <h2>Past Attendance Records</h2>
