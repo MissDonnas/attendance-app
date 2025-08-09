@@ -168,4 +168,47 @@ main {
 }
 
 .status-badge.not-scheduled {
-  background-color: #6c
+  background-color: #6c757d;
+  color: #fff;
+}
+
+.action-buttons {
+  display: flex;
+  gap: 10px;
+}
+
+/* Base style for all action buttons */
+.action-buttons button {
+  color: #fff;
+  border: none;
+  padding: 8px 12px;
+  border-radius: 5px;
+  cursor: pointer;
+  transition: background-color 0.3s ease;
+}
+
+/* Specific styles for each button */
+.check-in-button {
+  background-color: #007bff; /* Blue */
+}
+
+.check-in-button:hover {
+  background-color: #0056b3;
+}
+
+.check-out-button {
+  background-color: #6c757d; /* Grey */
+}
+
+.check-out-button:hover {
+  background-color: #5a6268;
+}
+
+.sunscreen-button {
+  background-color: #ffc107; /* Yellow */
+  color: #333; /* Black text for visibility on yellow */
+}
+
+.sunscreen-button:hover {
+  background-color: #e0a800;
+}
