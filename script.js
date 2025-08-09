@@ -20,15 +20,20 @@ const contentContainer = document.getElementById("content-container");
 
 // Helper function to check if a student is scheduled for today
 function isScheduledToday(studentSchedule) {
-  // Check if studentSchedule is an array. If not, or if it's empty, assume they are scheduled every day.
+  // If not an array or an empty array, consider them scheduled full time
   if (!Array.isArray(studentSchedule) || studentSchedule.length === 0) {
     return true;
   }
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
 
-  // Normalize by trimming whitespace and converting to lowercase
-  const lowerCaseSchedule = studentSchedule.map(day => day.trim().toLowerCase());
+  // Safely map and trim, ensuring each element is a string before converting
+  const lowerCaseSchedule = studentSchedule.map(day => {
+    if (typeof day === 'string') {
+      return day.trim().toLowerCase();
+    }
+    return ''; // Return an empty string if the data is not a string
+  }).filter(Boolean); // Filter out any non-string data
 
   return lowerCaseSchedule.includes(today.toLowerCase());
 }
