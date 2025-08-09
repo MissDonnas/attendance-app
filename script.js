@@ -145,7 +145,7 @@ function renderClassroomPage(classroom) {
   });
 }
 
-// New function to render the Past Attendance page
+// Updated function to render the Past Attendance page with expandable cards
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
     <h2>Past Attendance Records</h2>
@@ -159,34 +159,44 @@ function renderPastAttendancePage() {
 
     snapshot.forEach((doc) => {
       const report = doc.data();
-      const reportId = doc.id;
       const reportDate = new Date(report.timestamp.seconds * 1000).toLocaleDateString();
 
       const reportCard = document.createElement("div");
       reportCard.className = "report-card";
-      reportCard.innerHTML = `
-        <div class="report-header">
-          <h3>Attendance Report for ${reportDate}</h3>
-        </div>
-        <div class="report-content">
-          <h4>Daycare</h4>
-          <ul>
-            ${report.daycare.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-          </ul>
-          <h4>Classroom 1</h4>
-          <ul>
-            ${report.classroom1.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-          </ul>
-          <h4>Classroom 2</h4>
-          <ul>
-            ${report.classroom2.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-          </ul>
-          <h4>Classroom 3</h4>
-          <ul>
-            ${report.classroom3.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-          </ul>
-        </div>
+      
+      const header = document.createElement("div");
+      header.className = "report-header";
+      header.innerHTML = `<h3>Attendance Report for ${reportDate}</h3>`;
+      
+      const content = document.createElement("div");
+      content.className = "report-content";
+      content.style.display = 'none'; // Start hidden
+
+      content.innerHTML = `
+        <h4>Daycare</h4>
+        <ul>
+          ${report.daycare.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+        </ul>
+        <h4>Classroom 1</h4>
+        <ul>
+          ${report.classroom1.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+        </ul>
+        <h4>Classroom 2</h4>
+        <ul>
+          ${report.classroom2.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+        </ul>
+        <h4>Classroom 3</h4>
+        <ul>
+          ${report.classroom3.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
+        </ul>
       `;
+
+      header.onclick = () => {
+        content.style.display = content.style.display === 'none' ? 'block' : 'none';
+      };
+
+      reportCard.appendChild(header);
+      reportCard.appendChild(content);
       listDiv.appendChild(reportCard);
     });
   });
