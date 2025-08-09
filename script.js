@@ -56,12 +56,12 @@ function showPage(pageName) {
 }
 
 // Function to filter and display students
-function displayStudents(students, searchTerm = '') {
+function displayStudents(students, classroom, searchTerm = '') {
   const studentListDiv = document.getElementById("student-list");
   studentListDiv.innerHTML = "";
 
-  const filteredStudents = students.filter(student =>
-    student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  const filteredStudents = students.filter(studentObj =>
+    studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   let totalStudents = 0;
@@ -158,12 +158,12 @@ function renderClassroomPage(classroom) {
     });
     
     // Initial display of all students
-    displayStudents(allStudents);
+    displayStudents(allStudents, classroom);
 
     // Add search functionality
     const searchBar = document.getElementById("search-bar");
     searchBar.addEventListener("input", (e) => {
-      displayStudents(allStudents, e.target.value);
+      displayStudents(allStudents, classroom, e.target.value);
     });
   });
 }
@@ -305,24 +305,6 @@ async function saveAllAsPDF() {
 
   doc.save(`all-attendance-report.pdf`);
   alert('All attendance reports saved as one PDF and to attendance history!');
-}
-
-// Reset all data function
-async function resetAllData(classroom) {
-  if (confirm(`Are you sure you want to reset all data for ${classroom}? This cannot be undone.`)) {
-    const studentsRef = collection(db, classroom);
-    const studentsSnapshot = await getDocs(studentsRef);
-    
-    studentsSnapshot.forEach((studentDoc) => {
-      updateDoc(studentDoc.ref, {
-        checkedIn: false,
-        lastCheckIn: null,
-        lastCheckOut: null,
-        lastSunscreen: null,
-      });
-    });
-    alert(`All data for ${classroom} has been reset.`);
-  }
 }
 
 // This makes the functions available to the HTML's onclick attributes
