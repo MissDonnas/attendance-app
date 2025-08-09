@@ -20,7 +20,6 @@ const contentContainer = document.getElementById("content-container");
 
 // Helper function to check if a student is scheduled for today
 function isScheduledToday(studentSchedule) {
-  // If not an array or an empty array, assume they are scheduled full time
   if (!Array.isArray(studentSchedule) || studentSchedule.length === 0) {
     return true;
   }
@@ -177,20 +176,27 @@ function renderClassroomPage(classroom) {
   });
 }
 
-// New function to render the Past Attendance page
-function renderPastAttendancePage() {
-  contentContainer.innerHTML = `
-    <h2>Past Attendance Records</h2>
-    <div id="past-attendance-list"></div>
-  `;
+// New function to display and filter past attendance
+function displayPastAttendance(allReports, searchTerm = '') {
+  const listDiv = document.getElementById("past-attendance-list");
+  listDiv.innerHTML = "";
 
-  // Listen for changes in the attendanceHistory collection
-  onSnapshot(collection(db, "attendanceHistory"), (snapshot) => {
-    const listDiv = document.getElementById("past-attendance-list");
-    listDiv.innerHTML = "";
+  const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
-    snapshot.forEach((doc) => {
-      const report = doc.data();
+  allReports.forEach((doc) => {
+    const report = doc.data();
+    
+    // Check if the report should be displayed based on the search term
+    let shouldDisplay = false;
+    const classrooms = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
+    for (const classroom of classrooms) {
+      if (report[classroom].some(student => student.name.toLowerCase().includes(lowerCaseSearchTerm))) {
+        shouldDisplay = true;
+        break;
+      }
+    }
+
+    if (shouldDisplay) {
       const reportDate = new Date(report.timestamp.seconds * 1000).toLocaleDateString();
 
       const reportCard = document.createElement("div");
@@ -202,7 +208,7 @@ function renderPastAttendancePage() {
       
       const content = document.createElement("div");
       content.className = "report-content";
-      content.style.display = 'none'; // Start hidden
+      content.style.display = 'none';
 
       content.innerHTML = `
         <h4>Daycare</h4>
@@ -230,6 +236,33 @@ function renderPastAttendancePage() {
       reportCard.appendChild(header);
       reportCard.appendChild(content);
       listDiv.appendChild(reportCard);
+    }
+  });
+}
+
+
+// Updated function to render the Past Attendance page
+function renderPastAttendancePage() {
+  contentContainer.innerHTML = `
+    <h2>Past Attendance Records</h2>
+    <input type="text" id="past-attendance-search-bar" placeholder="Search by student name..." />
+    <div id="past-attendance-list"></div>
+  `;
+
+  // Listen for changes in the attendanceHistory collection
+  onSnapshot(collection(db, "attendanceHistory"), (snapshot) => {
+    const allReports = [];
+    snapshot.forEach((doc) => {
+      allReports.push(doc);
+    });
+
+    // Initial display of all reports
+    displayPastAttendance(allReports);
+
+    // Add search functionality
+    const searchBar = document.getElementById("past-attendance-search-bar");
+    searchBar.addEventListener("input", (e) => {
+      displayPastAttendance(allReports, e.target.value);
     });
   });
 }
