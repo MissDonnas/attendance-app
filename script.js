@@ -77,7 +77,6 @@ function displayStudents(students, classroom, searchTerm = '') {
   let absentCount = 0;
 
   filteredStudents.forEach(({ student, studentId }) => {
-    // These counts are for all students displayed
     totalCount++; 
     if (student.checkedIn) {
       presentCount++;
@@ -85,7 +84,6 @@ function displayStudents(students, classroom, searchTerm = '') {
       absentCount++;
     }
 
-    // Determine status for individual student display (still considers schedule)
     const isScheduled = isScheduledToday(student.schedule);
     const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
     const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
@@ -186,7 +184,6 @@ function displayPastAttendance(allReports, searchTerm = '') {
   allReports.forEach((doc) => {
     const report = doc.data();
     
-    // Check if the report should be displayed based on the search term
     let shouldDisplay = false;
     const classrooms = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
     for (const classroom of classrooms) {
@@ -240,26 +237,22 @@ function displayPastAttendance(allReports, searchTerm = '') {
   });
 }
 
-
 // Updated function to render the Past Attendance page
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
     <h2>Past Attendance Records</h2>
-    <input type="text" id="past-attendance-search-bar" placeholder="Search by student name..." />
+    <input type="text" id="past-attendance-search-bar" placeholder="Search by date..." />
     <div id="past-attendance-list"></div>
   `;
 
-  // Listen for changes in the attendanceHistory collection
   onSnapshot(collection(db, "attendanceHistory"), (snapshot) => {
     const allReports = [];
     snapshot.forEach((doc) => {
       allReports.push(doc);
     });
 
-    // Initial display of all reports
     displayPastAttendance(allReports);
 
-    // Add search functionality
     const searchBar = document.getElementById("past-attendance-search-bar");
     searchBar.addEventListener("input", (e) => {
       displayPastAttendance(allReports, e.target.value);
@@ -319,7 +312,6 @@ async function saveAllAsPDF() {
         student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString() : 'N/A'
       ]);
 
-      // Add to attendance records for Firebase
       attendanceRecords.push({
         name: student.name,
         status: status
@@ -339,7 +331,6 @@ async function saveAllAsPDF() {
     isFirstPage = false;
   }
   
-  // Save the attendance data to the new Firestore collection
   await addDoc(collection(db, "attendanceHistory"), {
     ...attendanceDataToSave,
     timestamp: serverTimestamp()
@@ -375,5 +366,4 @@ window.applySunscreen = applySunscreen;
 window.saveAllAsPDF = saveAllAsPDF;
 window.resetAllData = resetAllData;
 
-// Initial page load, now defaults to daycare
 showPage("daycare");
