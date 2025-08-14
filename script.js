@@ -1,6 +1,6 @@
 // Import the Firebase libraries as modules from a CDN
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -26,7 +26,6 @@ function isScheduledToday(studentSchedule) {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
 
-  // Safely map and trim, ensuring each element is a string before converting
   const lowerCaseSchedule = studentSchedule.map(day => {
     if (typeof day === 'string') {
       return day.trim().toLowerCase();
@@ -156,17 +155,14 @@ function renderClassroomPage(classroom) {
     <div id="student-list"></div>
   `;
 
-  // Fetch student data from Firebase
   onSnapshot(collection(db, classroom), (snapshot) => {
     const allStudents = [];
     snapshot.forEach((doc) => {
       allStudents.push({ student: doc.data(), studentId: doc.id });
     });
     
-    // Initial display of all students
     displayStudents(allStudents, classroom);
 
-    // Add search functionality
     const searchBar = document.getElementById("search-bar");
     searchBar.addEventListener("input", (e) => {
       displayStudents(allStudents, classroom, e.target.value);
@@ -237,6 +233,7 @@ function displayPastAttendance(allReports, searchTerm = '') {
   });
 }
 
+
 // Updated function to render the Past Attendance page
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
@@ -260,28 +257,78 @@ function renderPastAttendancePage() {
   });
 }
 
-// Firebase functions to update attendance
-function checkIn(classroom, studentId) {
-  updateDoc(doc(db, classroom, studentId), {
-    checkedIn: true,
-    lastCheckIn: serverTimestamp(),
-  });
+// Centralized function to update a student's status across all collections
+async function updateStudentStatusBySharedId(sharedId, updateData) {
+    if (!sharedId) {
+        console.error("Shared ID is required to update student status across collections.");
+        return;
+    }
+
+    const collectionsToSearch = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
+    
+    for (const collectionName of collectionsToSearch) {
+        const q = query(collection(db, collectionName), where('sharedId', '==', sharedId));
+        const querySnapshot = await getDocs(q);
+
+        querySnapshot.forEach((docSnap) => {
+            if (docSnap.exists()) {
+                updateDoc(doc(db, collectionName, docSnap.id), updateData);
+            }
+        });
+    }
 }
 
-function checkOut(classroom, studentId) {
-  updateDoc(doc(db, classroom, studentId), {
-    checkedIn: false,
-    lastCheckOut: serverTimestamp(),
-  });
+async function checkIn(classroom, studentId) {
+    const studentDocRef = doc(db, classroom, studentId);
+    const studentDocSnap = await getDoc(studentDocRef);
+
+    if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
+        // If a sharedId exists, use the centralized function to update all linked documents
+        await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
+            checkedIn: true,
+            lastCheckIn: serverTimestamp(),
+        });
+    } else {
+        // Otherwise, fall back to the original behavior for single-room students
+        await updateDoc(studentDocRef, {
+            checkedIn: true,
+            lastCheckIn: serverTimestamp(),
+        });
+    }
 }
 
-function applySunscreen(classroom, studentId) {
-  updateDoc(doc(db, classroom, studentId), {
-    lastSunscreen: serverTimestamp(),
-  });
+async function checkOut(classroom, studentId) {
+    const studentDocRef = doc(db, classroom, studentId);
+    const studentDocSnap = await getDoc(studentDocRef);
+
+    if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
+        await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
+            checkedIn: false,
+            lastCheckOut: serverTimestamp(),
+        });
+    } else {
+        await updateDoc(studentDocRef, {
+            checkedIn: false,
+            lastCheckOut: serverTimestamp(),
+        });
+    }
 }
 
-// New function to save PDF and to Firebase
+async function applySunscreen(classroom, studentId) {
+    const studentDocRef = doc(db, classroom, studentId);
+    const studentDocSnap = await getDoc(studentDocRef);
+
+    if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
+        await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
+            lastSunscreen: serverTimestamp(),
+        });
+    } else {
+        await updateDoc(studentDocRef, {
+            lastSunscreen: serverTimestamp(),
+        });
+    }
+}
+
 async function saveAllAsPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
