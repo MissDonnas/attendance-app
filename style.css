@@ -80,6 +80,11 @@ header {
     font-size: 1.5em;
 }
 
+.total-card p {
+    margin: 5px 0 0;
+    color: #666;
+}
+
 .reset-button {
     padding: 10px 15px;
     border: none;
@@ -169,28 +174,30 @@ header {
     font-size: 0.9em;
 }
 
+/* Specific styles for each button */
 .check-in-button {
-    background-color: #28a745;
+    background-color: #007bff; /* Blue */
 }
 
 .check-in-button:hover {
-    background-color: #218838;
+    background-color: #0056b3;
 }
 
 .check-out-button {
-    background-color: #ffc107;
+    background-color: #6c757d; /* Grey */
 }
 
 .check-out-button:hover {
-    background-color: #e0a800;
+    background-color: #5a6268;
 }
 
 .sunscreen-button {
-    background-color: #17a2b8;
+    background-color: #ffc107; /* Yellow */
+    color: #333;
 }
 
 .sunscreen-button:hover {
-    background-color: #138496;
+    background-color: #e0a800;
 }
 
 .report-card {
