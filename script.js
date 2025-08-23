@@ -68,7 +68,7 @@ function displayStudents(students, classroom, searchTerm = '') {
   studentListDiv.innerHTML = "";
 
   const filteredStudents = students.filter(studentObj =>
-    studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
+    studentObj.student && studentObj.student.name && typeof studentObj.student.name === 'string' && studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   let totalCount = 0;
@@ -283,13 +283,11 @@ async function checkIn(classroom, studentId) {
     const studentDocSnap = await getDoc(studentDocRef);
 
     if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
-        // If a sharedId exists, use the centralized function to update all linked documents
         await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
             checkedIn: true,
             lastCheckIn: serverTimestamp(),
         });
     } else {
-        // Otherwise, fall back to the original behavior for single-room students
         await updateDoc(studentDocRef, {
             checkedIn: true,
             lastCheckIn: serverTimestamp(),
