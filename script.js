@@ -145,7 +145,7 @@ function renderClassroomPage(classroom) {
         </div>
       </div>
       <div>
-        <button class="reset-button" onclick="resetAllData('${classroom}')">Reset All Data</button>
+        <button class="reset-button" onclick="resetAllData()">Reset All Data</button>
       </div>
     </div>
     <div id="student-header">
@@ -389,20 +389,25 @@ async function saveAllAsPDF() {
 }
 
 // Reset all data function
-async function resetAllData(classroom) {
-  if (confirm(`Are you sure you want to reset all data for ${classroom}? This cannot be undone.`)) {
-    const studentsRef = collection(db, classroom);
-    const studentsSnapshot = await getDocs(studentsRef);
+async function resetAllData() {
+  if (confirm(`Are you sure you want to reset all attendance data for all classrooms? This cannot be undone.`)) {
+    const collectionsToReset = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
     
-    studentsSnapshot.forEach((studentDoc) => {
-      updateDoc(studentDoc.ref, {
-        checkedIn: false,
-        lastCheckIn: null,
-        lastCheckOut: null,
-        lastSunscreen: null,
+    for (const collectionName of collectionsToReset) {
+      const studentsRef = collection(db, collectionName);
+      const studentsSnapshot = await getDocs(studentsRef);
+      
+      const updatePromises = studentsSnapshot.docs.map(docSnap => {
+        return updateDoc(doc(db, collectionName, docSnap.id), {
+          checkedIn: false,
+          lastCheckIn: null,
+          lastCheckOut: null,
+          lastSunscreen: null,
+        });
       });
-    });
-    alert(`All data for ${classroom} has been reset.`);
+      await Promise.all(updatePromises);
+    }
+    alert(`All attendance data has been reset for all classrooms.`);
   }
 }
 
