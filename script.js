@@ -1,6 +1,6 @@
 // Import the Firebase libraries as modules from a CDN
 import { initializeApp } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-app.js';
-import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc, getDoc, query, where } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
+import { getFirestore, collection, onSnapshot, updateDoc, doc, serverTimestamp, getDocs, addDoc, getDoc, query, where, orderBy } from 'https://www.gstatic.com/firebasejs/9.6.8/firebase-firestore.js';
 
 // Your Firebase configuration
 const firebaseConfig = {
@@ -155,14 +155,17 @@ function renderClassroomPage(classroom) {
     <div id="student-list"></div>
   `;
 
-  onSnapshot(collection(db, classroom), (snapshot) => {
+  // Fetch student data from Firebase, sorted by name
+  onSnapshot(query(collection(db, classroom), orderBy("name")), (snapshot) => {
     const allStudents = [];
     snapshot.forEach((doc) => {
       allStudents.push({ student: doc.data(), studentId: doc.id });
     });
     
+    // Initial display of all students
     displayStudents(allStudents, classroom);
 
+    // Add search functionality
     const searchBar = document.getElementById("search-bar");
     searchBar.addEventListener("input", (e) => {
       displayStudents(allStudents, classroom, e.target.value);
