@@ -1,28 +1,31 @@
 <!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Attendance Dashboard</title>
-    <link rel="stylesheet" href="style.css" />
+    <link rel="stylesheet" href="styles.css">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.25/jspdf.plugin.autotable.min.js"></script>
-  </head>
-  <body>
-    <header>
-      <h1>Attendance Dashboard</h1>
-      <nav>
-        <button onclick="showPage('daycare')">Daycare</button>
-        <button onclick="showPage('classroom1')">Classroom 1</button>
-        <button onclick="showPage('classroom2')">Classroom 2</button>
-        <button onclick="showPage('classroom3')">Classroom 3</button>
-        <button onclick="showPage('pastattendance')">Past Attendance</button>
-        <button class="pdf-button" onclick="saveAllAsPDF()">Save All as PDF</button>
-      </nav>
-    </header>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf-autotable/3.5.23/jspdf.plugin.autotable.min.js"></script>
+</head>
+<body>
+    <div class="dashboard-container">
+        <header>
+            <h1>Attendance Dashboard</h1>
+            <nav class="navbar">
+                <button onclick="showPage('daycare')">Daycare</button>
+                <button onclick="showPage('classroom1')">Classroom 1</button>
+                <button onclick="showPage('classroom2')">Classroom 2</button>
+                <button onclick="showPage('classroom3')">Classroom 3</button>
+                <button onclick="showPage('pastattendance')">Past Attendance</button>
+                <button class="save-button" onclick="saveAllAsPDF()">Save All as PDF</button>
+            </nav>
+        </header>
 
-    <main id="content-container"></main>
+        <main id="content-container">
+            </main>
+    </div>
 
-    <script src="script.js" type="module"></script>
-  </body>
+    <script type="module" src="script.js"></script>
+</body>
 </html>
