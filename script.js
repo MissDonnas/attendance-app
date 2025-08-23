@@ -67,7 +67,14 @@ function displayStudents(students, classroom, searchTerm = '') {
   const studentListDiv = document.getElementById("student-list");
   studentListDiv.innerHTML = "";
 
-  const filteredStudents = students.filter(studentObj =>
+  // Sort students by last name
+  const sortedStudents = students.sort((a, b) => {
+    const lastNameA = a.student.name.split(' ').pop();
+    const lastNameB = b.student.name.split(' ').pop();
+    return lastNameA.localeCompare(lastNameB);
+  });
+  
+  const filteredStudents = sortedStudents.filter(studentObj =>
     studentObj.student && studentObj.student.name && typeof studentObj.student.name === 'string' && studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
@@ -155,8 +162,8 @@ function renderClassroomPage(classroom) {
     <div id="student-list"></div>
   `;
 
-  // Fetch student data from Firebase, sorted by name
-  onSnapshot(query(collection(db, classroom), orderBy("name")), (snapshot) => {
+  // Fetch student data from Firebase
+  onSnapshot(collection(db, classroom), (snapshot) => {
     const allStudents = [];
     snapshot.forEach((doc) => {
       allStudents.push({ student: doc.data(), studentId: doc.id });
