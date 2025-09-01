@@ -2,234 +2,308 @@ body {
     font-family: Arial, sans-serif;
     background-color: #f4f7f9;
     color: #333;
+    line-height: 1.6;
     margin: 0;
     padding: 20px;
 }
 
-.dashboard-container {
-    max-width: 900px;
+.container {
+    max-width: 1200px;
     margin: 0 auto;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    background: #fff;
+    padding: 20px 30px;
+    border-radius: 10px;
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
-header {
+h1 {
+    text-align: center;
+    color: #2c3e50;
+    font-size: 2.5em;
+    margin-bottom: 10px;
+}
+
+/* Styling for the current date display */
+.current-date {
+    font-size: 1.1em;
+    font-weight: bold;
+    color: #555;
     text-align: center;
     margin-bottom: 20px;
+    padding: 10px;
+    background-color: #f0f0f0;
+    border-radius: 5px;
 }
 
-.navbar {
+/* Status Bar */
+.status-bar {
+    display: flex;
+    justify-content: space-around;
+    background-color: #ecf0f1;
+    padding: 15px;
+    border-radius: 8px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.status-bar span {
+    font-size: 1.2em;
+    color: #34495e;
+}
+
+.status-bar strong {
+    font-weight: bold;
+    font-size: 1.5em;
+    color: #2980b9;
+}
+
+/* Styling for the new static day type summary bar */
+.day-type-summary {
+    display: flex;
+    justify-content: space-around;
+    background-color: #e0f7fa; /* A light blue background */
+    padding: 10px;
+    border-radius: 8px;
+    margin-bottom: 20px; /* Space below this bar */
+    box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+    flex-wrap: wrap; /* Allows items to wrap on smaller screens */
+    border: 1px solid #b2ebf2; /* A subtle border */
+}
+
+.day-type-summary span {
+    font-size: 1.1em;
+    color: #00796b; /* Darker green for text */
+    flex-basis: 48%; /* Roughly half width for two items, allows for margin */
+    text-align: center;
+}
+
+.day-type-summary strong {
+    color: #004d40; /* Even darker green for numbers */
+    font-size: 1.2em; /* Slightly larger for the numbers */
+}
+
+/* Top Action Buttons */
+.top-buttons {
     display: flex;
     justify-content: center;
-    gap: 10px;
+    gap: 15px;
     margin-bottom: 20px;
 }
 
-.navbar button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
-    background-color: #007bff;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.navbar button:hover {
-    background-color: #0056b3;
-}
-
-.save-button {
-    background-color: #28a745 !important;
-}
-
-.save-button:hover {
-    background-color: #218838 !important;
-}
-
-#info-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    margin-bottom: 20px;
-}
-
-#date-display {
-    font-size: 1.2em;
+.action-btn {
+    padding: 12px 25px;
+    font-size: 1em;
     font-weight: bold;
-}
-
-.totals-container {
-    display: flex;
-    gap: 15px;
-}
-
-.total-card {
-    background-color: #e9ecef;
-    padding: 10px 20px;
-    border-radius: 5px;
-    text-align: center;
-}
-
-.total-card h3 {
-    margin: 0;
-    font-size: 1.5em;
-}
-
-.total-card p {
-    margin: 5px 0 0;
-    color: #666;
-}
-
-.reset-button {
-    padding: 10px 15px;
     border: none;
-    border-radius: 5px;
-    background-color: #dc3545;
-    color: white;
-    font-size: 16px;
-    cursor: pointer;
-    transition: background-color 0.3s;
-}
-
-.reset-button:hover {
-    background-color: #c82333;
-}
-
-#student-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 20px;
-}
-
-#search-bar {
-    padding: 8px;
-    border: 1px solid #ccc;
-    border-radius: 5px;
-    width: 200px;
-}
-
-#student-list {
-    display: flex;
-    flex-direction: column;
-    gap: 15px;
-}
-
-.student-card {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    padding: 15px;
-    border: 1px solid #ddd;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    cursor: pointer;
+    transition: background-color 0.3s, transform 0.2s;
 }
 
-.student-info h4 {
-    margin: 0 0 5px 0;
+.action-btn:hover {
+    transform: translateY(-2px);
 }
 
-.student-info p {
-    margin: 0;
-    font-size: 0.9em;
-    color: #666;
-}
-
-.status-badge {
-    padding: 4px 8px;
-    border-radius: 12px;
+.save-pdf-btn {
+    background-color: #27ae60;
     color: white;
-    font-size: 0.8em;
+}
+
+.save-pdf-btn:hover {
+    background-color: #2ecc71;
+}
+
+.reset-btn {
+    background-color: #e74c3c;
+    color: white;
+}
+
+.reset-btn:hover {
+    background-color: #c0392b;
+}
+
+/* Search Bar */
+.search-container {
+    margin-bottom: 20px;
+}
+
+.search-input {
+    width: 100%;
+    padding: 10px;
+    font-size: 1em;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-sizing: border-box; /* Ensures padding doesn't affect total width */
+    transition: border-color 0.3s;
+}
+
+.search-input:focus {
+    outline: none;
+    border-color: #3498db;
+}
+
+/* Student List */
+.student-list {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+    padding: 0;
+    margin: 0;
+}
+
+.student-item {
+    background-color: #f9f9f9;
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-left: 5px solid #bdc3c7; /* Default border color */
+}
+
+.student-item:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15);
+}
+
+.student-item.checked-in {
+    border-left: 5px solid #2ecc71; /* Green for Present */
+}
+
+.student-item.checked-out {
+    border-left: 5px solid #e74c3c; /* Red for Absent */
+}
+
+.student-item.sunscreen-applied {
+    background-color: #f7fcf0; /* Light green background for sunscreen */
+}
+
+.student-item h3 {
+    margin-top: 0;
+    font-size: 1.4em;
+    color: #2c3e50;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+    margin-bottom: 10px;
+}
+
+.student-item p {
+    margin: 5px 0;
+    font-size: 0.9em;
+}
+
+.status-info strong {
     font-weight: bold;
+    color: #555;
 }
 
-.checked-in {
-    background-color: #28a745;
-}
-
-.checked-out {
-    background-color: #ffc107;
-}
-
-.not-scheduled {
-    background-color: #6c757d;
-}
-
-.action-buttons {
+.buttons {
     display: flex;
-    gap: 8px;
+    justify-content: space-between;
+    gap: 10px;
+    margin-top: 15px;
 }
 
-.action-buttons button {
-    padding: 8px 12px;
+.buttons button {
+    flex: 1;
+    padding: 10px;
+    font-size: 0.9em;
+    font-weight: bold;
     border: none;
     border-radius: 5px;
-    color: white;
     cursor: pointer;
-    font-size: 0.9em;
+    transition: background-color 0.3s;
 }
 
-/* Specific styles for each button */
-.check-in-button {
-    background-color: #007bff; /* Blue */
+.check-in-btn {
+    background-color: #3498db;
+    color: white;
 }
 
-.check-in-button:hover {
-    background-color: #0056b3;
+.check-in-btn:hover {
+    background-color: #2980b9;
 }
 
-.check-out-button {
-    background-color: #6c757d; /* Grey */
+.check-out-btn {
+    background-color: #95a5a6;
+    color: white;
 }
 
-.check-out-button:hover {
-    background-color: #5a6268;
+.check-out-btn:hover {
+    background-color: #7f8c8d;
 }
 
-.sunscreen-button {
-    background-color: #ffc107; /* Yellow */
-    color: #333;
+.sunscreen-btn {
+    background-color: #f39c12;
+    color: white;
 }
 
-.sunscreen-button:hover {
-    background-color: #e0a800;
+.sunscreen-btn:hover {
+    background-color: #e67e22;
 }
 
-.report-card {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
+/* ============================================== */
+/* MOBILE-FRIENDLY STYLES                */
+/* ============================================== */
+@media (max-width: 768px) {
+    body {
+        padding: 10px;
+    }
 
-.report-header {
-  background-color: #f0f0f0;
-  padding: 10px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
+    .container {
+        padding: 15px;
+    }
 
-.report-content {
-  padding: 10px;
-  display: none;
-}
+    h1 {
+        font-size: 1.8em;
+    }
 
-.report-content h4 {
-  margin-top: 0;
-}
+    .status-bar, .day-type-summary {
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        padding: 10px;
+    }
 
-.report-content ul {
-  list-style-type: none;
-  padding: 0;
-}
+    .status-bar span, .day-type-summary span {
+        font-size: 1.1em;
+        text-align: center;
+    }
 
-.report-content li {
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
+    .status-bar strong {
+        font-size: 1.2em;
+    }
+
+    .day-type-summary strong {
+        font-size: 1.2em;
+    }
+
+    .top-buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .action-btn {
+        width: 100%;
+        font-size: 0.9em;
+    }
+
+    .student-list {
+        display: block; /* Stacks student cards vertically */
+        gap: 0;
+    }
+
+    .student-item {
+        margin-bottom: 15px;
+    }
+
+    .buttons {
+        flex-direction: column;
+        gap: 10px;
+    }
+
+    .buttons button {
+        width: 100%;
+        padding: 12px;
+        font-size: 1em;
+    }
 }
