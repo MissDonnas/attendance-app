@@ -1,61 +1,68 @@
 body {
     font-family: Arial, sans-serif;
-    background-color: #f4f7f9;
-    color: #333;
+    background-color: #f4f4f4;
     margin: 0;
-    padding: 20px;
-}
-
-.dashboard-container {
-    max-width: 900px;
-    margin: 0 auto;
-    background-color: #fff;
-    padding: 20px;
-    border-radius: 8px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-header {
-    text-align: center;
-    margin-bottom: 20px;
-}
-
-.navbar {
+    padding: 0;
     display: flex;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 20px;
+    flex-direction: column;
+    align-items: center;
 }
 
-.navbar button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
+#header {
     background-color: #007bff;
     color: white;
-    font-size: 16px;
+    padding: 15px 0;
+    width: 100%;
+    text-align: center;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#header h1 {
+    margin: 0;
+}
+
+#nav-bar {
+    background-color: #333;
+    width: 100%;
+    text-align: center;
+    padding: 10px 0;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+}
+
+#nav-bar button {
+    background-color: #555;
+    color: white;
+    border: none;
+    padding: 10px 20px;
+    margin: 0 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    font-size: 1em;
+    border-radius: 5px;
+    transition: background-color 0.3s ease;
 }
 
-.navbar button:hover {
-    background-color: #0056b3;
+#nav-bar button:hover {
+    background-color: #777;
 }
 
-.save-button {
-    background-color: #28a745 !important;
-}
-
-.save-button:hover {
-    background-color: #218838 !important;
+#content-container {
+    width: 90%;
+    max-width: 1200px;
+    margin-top: 20px;
+    padding: 20px;
+    background-color: white;
+    border-radius: 8px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
 #info-header {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    flex-wrap: wrap;
     margin-bottom: 20px;
+    padding: 10px;
+    background-color: #e9ecef;
+    border-radius: 5px;
 }
 
 #date-display {
@@ -69,31 +76,28 @@ header {
 }
 
 .total-card {
-    background-color: #e9ecef;
-    padding: 10px 20px;
-    border-radius: 5px;
     text-align: center;
+    padding: 10px 15px;
+    background-color: #f8f9fa;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    box-shadow: inset 0 1px 3px rgba(0, 0, 0, 0.05);
 }
 
 .total-card h3 {
     margin: 0;
     font-size: 1.5em;
-}
-
-.total-card p {
-    margin: 5px 0 0;
-    color: #666;
+    color: #007bff;
 }
 
 .reset-button {
-    padding: 10px 15px;
-    border: none;
-    border-radius: 5px;
     background-color: #dc3545;
     color: white;
-    font-size: 16px;
+    border: none;
+    padding: 10px 15px;
+    border-radius: 5px;
     cursor: pointer;
-    transition: background-color 0.3s;
+    transition: background-color 0.3s ease;
 }
 
 .reset-button:hover {
@@ -109,9 +113,10 @@ header {
 
 #search-bar {
     padding: 8px;
-    border: 1px solid #ccc;
     border-radius: 5px;
-    width: 200px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    width: 300px;
 }
 
 #student-list {
@@ -127,11 +132,19 @@ header {
     padding: 15px;
     border: 1px solid #ddd;
     border-radius: 8px;
-    background-color: #f9f9f9;
+    background-color: #fefefe;
+    transition: box-shadow 0.3s ease;
+}
+
+.student-card:hover {
+    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
 }
 
 .student-info h4 {
     margin: 0 0 5px 0;
+    font-size: 1.2em;
+    display: flex;
+    align-items: center;
 }
 
 .student-info p {
@@ -143,181 +156,145 @@ header {
 .status-badge {
     padding: 4px 8px;
     border-radius: 12px;
-    color: white;
     font-size: 0.8em;
     font-weight: bold;
+    margin-left: 10px;
+    text-transform: capitalize;
 }
 
-.checked-in {
-    background-color: #28a745;
+.status-badge.checked-in {
+    background-color: #4CAF50;
+    color: white;
 }
 
-.checked-out {
-    background-color: #ffc107;
+.status-badge.checked-out {
+    background-color: #FFA500;
+    color: white;
 }
 
-.not-scheduled {
-    background-color: #6c757d;
+.status-badge.absent {
+    background-color: #ff6347;
+    color: white;
 }
 
-.action-buttons {
-    display: flex;
-    gap: 8px;
+.status-badge.not-scheduled {
+    background-color: #cccccc;
+    color: #333333;
 }
 
 .action-buttons button {
     padding: 8px 12px;
     border: none;
     border-radius: 5px;
-    color: white;
     cursor: pointer;
+    margin-left: 5px;
     font-size: 0.9em;
+    color: white;
+    transition: background-color 0.3s ease;
 }
 
-/* Specific styles for each button */
 .check-in-button {
-    background-color: #007bff; /* Blue */
+    background-color: #28a745;
 }
 
 .check-in-button:hover {
-    background-color: #0056b3;
+    background-color: #218838;
 }
 
 .check-out-button {
-    background-color: #6c757d; /* Grey */
+    background-color: #dc3545;
 }
 
 .check-out-button:hover {
-    background-color: #5a6268;
+    background-color: #c82333;
 }
 
 .sunscreen-button {
-    background-color: #ffc107; /* Yellow */
-    color: #333;
+    background-color: #007bff;
 }
 
 .sunscreen-button:hover {
-    background-color: #e0a800;
+    background-color: #0069d9;
 }
 
-.report-card {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 10px;
-}
-
-.report-header {
-  background-color: #f0f0f0;
-  padding: 10px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.report-content {
-  padding: 10px;
-  display: none;
-}
-
-.report-content h4 {
-  margin-top: 0;
-}
-
-.report-content ul {
-  list-style-type: none;
-  padding: 0;
-}
-
-.report-content li {
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
-}
-
-/* New styles for the bus buttons */
+/* Styles for Bus Page specific buttons */
 .bus-button {
     padding: 8px 12px;
     border: none;
     border-radius: 5px;
-    color: white;
     cursor: pointer;
+    margin-left: 5px;
     font-size: 0.9em;
+    color: white;
     transition: background-color 0.3s ease;
 }
 
-.am-in-button,
-.pm-in-button {
-    background-color: #007bff; /* Blue for check-ins */
+.am-in-button, .pm-in-button {
+    background-color: #28a745; /* Green */
 }
 
-.am-in-button:hover,
-.pm-in-button:hover {
-    background-color: #0056b3;
+.am-out-button, .pm-out-button {
+    background-color: #dc3545; /* Red */
 }
 
-.am-out-button,
-.pm-out-button {
-    background-color: #6c757d; /* Grey for check-outs */
+/* Past Attendance Styles */
+.report-card {
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    overflow: hidden;
+    background-color: #f9f9f9;
 }
 
-.am-out-button:hover,
-.pm-out-button:hover {
-    background-color: #5a6268;
+.report-header {
+    background-color: #e9ecef;
+    padding: 12px 15px;
+    cursor: pointer;
+    border-bottom: 1px solid #e0e0e0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
-/* --- Mobile Styles --- */
-@media (max-width: 600px) {
-    body {
-        padding: 10px;
-    }
+.report-header h3 {
+    margin: 0;
+    font-size: 1em;
+}
 
-    .navbar {
-        flex-direction: column;
-        gap: 5px;
-    }
+.report-content {
+    padding: 15px;
+    background-color: white;
+    display: none;
+}
 
-    .navbar button {
-        width: 100%;
-        margin: 0;
-    }
+.report-content h4 {
+    margin-top: 0;
+    border-bottom: 1px solid #ccc;
+    padding-bottom: 5px;
+}
 
-    #info-header {
-        flex-direction: column;
-        gap: 15px;
-        text-align: center;
-    }
+.report-table {
+    width: 100%;
+    border-collapse: collapse;
+    margin-top: 10px;
+}
 
-    .totals-container {
-        justify-content: space-around;
-        width: 100%;
-    }
-    
-    #student-header {
-        flex-direction: column;
-        gap: 10px;
-        align-items: stretch;
-    }
+.report-table th, .report-table td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+}
 
-    #search-bar {
-        width: 100%;
-    }
+.report-table th {
+    background-color: #f2f2f2;
+}
 
-    .student-card {
-        flex-direction: column;
-        align-items: stretch;
-        gap: 10px;
-    }
-
-    .student-info, .action-buttons {
-        text-align: center;
-        width: 100%;
-    }
-
-    .action-buttons {
-        flex-direction: column;
-    }
-    
-    .action-buttons button {
-        width: 100%;
-    }
+#past-attendance-search-bar {
+    padding: 8px;
+    border-radius: 5px;
+    border: 1px solid #ccc;
+    font-size: 1em;
+    width: 100%;
+    max-width: 400px;
+    margin-bottom: 20px;
 }
