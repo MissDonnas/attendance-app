@@ -356,7 +356,7 @@ async function renderFullDayPage() {
             <div id="date-display">${formattedDate}</div>
         </div>
         <div id="student-header">
-            <h2>FULL DAY</h2>
+            <h2>FULL DAY STUDENTS</h2>
             <input type="text" id="search-bar" placeholder="Search students..." />
         </div>
         <div id="student-list"></div>
@@ -375,27 +375,38 @@ async function renderFullDayPage() {
     });
 }
   
-// **Updated function to fetch only Full Day students**
+// **Updated function to fetch only Full Day students (excluding daycare)**
 async function fetchFullDayStudents() {
-    const collections = ['classroom1', 'classroom2', 'classroom3'];
+    const fullDayCollections = ['classroom1', 'classroom2', 'classroom3'];
     const studentsBySharedId = new Map();
 
-    for (const collectionName of collections) {
+    // First, get all students from the Daycare collection to create a set of sharedIds to exclude
+    const daycareStudentsSnapshot = await getDocs(collection(db, 'daycare'));
+    const daycareSharedIds = new Set();
+    daycareStudentsSnapshot.forEach(docSnap => {
+        daycareSharedIds.add(docSnap.data().sharedId);
+    });
+
+    // Now, fetch students from the full day collections
+    for (const collectionName of fullDayCollections) {
         const snapshot = await getDocs(collection(db, collectionName));
         snapshot.forEach(docSnap => {
             const student = docSnap.data();
             const sharedId = student.sharedId || docSnap.id;
             
-            if (!studentsBySharedId.has(sharedId)) {
-                studentsBySharedId.set(sharedId, {
-                    ...student,
-                    id: docSnap.id,
-                    classroom: collectionName
-                });
-            } else {
-                const existingStudent = studentsBySharedId.get(sharedId);
-                const updatedStudent = { ...existingStudent, ...student };
-                studentsBySharedId.set(sharedId, updatedStudent);
+            // Only add student if their sharedId is NOT in the daycare set
+            if (!daycareSharedIds.has(sharedId)) {
+                if (!studentsBySharedId.has(sharedId)) {
+                    studentsBySharedId.set(sharedId, {
+                        ...student,
+                        id: docSnap.id,
+                        classroom: collectionName
+                    });
+                } else {
+                    const existingStudent = studentsBySharedId.get(sharedId);
+                    const updatedStudent = { ...existingStudent, ...student };
+                    studentsBySharedId.set(sharedId, updatedStudent);
+                }
             }
         });
     }
@@ -405,7 +416,7 @@ async function fetchFullDayStudents() {
     return allStudents;
 }
   
-// **Updated display function for Full Day students**
+// **Updated display function for Full Day students with buttons**
 function displayFullDayStudents(students, container) {
     container.innerHTML = "";
     students.forEach(student => {
@@ -432,6 +443,10 @@ function displayFullDayStudents(students, container) {
             <div class="student-info">
                 <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
                 <p>Classroom: ${student.classroom.toUpperCase().replace("-", " ")}</p>
+            </div>
+            <div class="action-buttons">
+                <button class="check-in-button" onclick="checkIn('${student.classroom}', '${student.id}')">Check In</button>
+                <button class="check-out-button" onclick="checkOut('${student.classroom}', '${student.id}')">Check Out</button>
             </div>
         `;
         container.appendChild(studentCard);
