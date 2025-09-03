@@ -186,7 +186,7 @@ function displayStudents(students, classroom, searchTerm = '') {
   document.getElementById("absent-count").textContent = absentCount;
 }
 
-// NEW: Function to render the new bus page
+// Function to render the new bus page
 function renderBusPage(classroom) {
     const today = new Date();
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -235,7 +235,7 @@ function renderBusPage(classroom) {
     });
 }
   
-// NEW: Function to display students for the bus page with conditional buttons
+// Function to display students for the bus page with conditional buttons and timestamps
 function displayBusStudents(students, classroom, searchTerm = '') {
     const studentListDiv = document.getElementById("student-list");
     studentListDiv.innerHTML = "";
@@ -263,41 +263,59 @@ function displayBusStudents(students, classroom, searchTerm = '') {
       const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
       const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
       
-      const lastAMIn = student.lastAMIn
-        ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
-        : "N/A";
-      const lastAMOut = student.lastAMOut
-        ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString()
-        : "N/A";
-      const lastPMIn = student.lastPMIn
-        ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString()
-        : "N/A";
-      const lastPMOut = student.lastPMOut
-        ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString()
-        : "N/A";
-  
-      const studentCard = document.createElement("div");
-      studentCard.className = "student-card";
-  
-      let buttonsHtml = "";
       const todaysSchedule = student.schedule ? student.schedule[today] : null;
+      let timestampsHtml = '';
+      let buttonsHtml = '';
 
       if (todaysSchedule === 'AM' || todaysSchedule === 'Both') {
+          const lastAMIn = student.lastAMIn
+            ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
+            : "N/A";
+          const lastAMOut = student.lastAMOut
+            ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString()
+            : "N/A";
+          timestampsHtml += `<p>AM In: ${lastAMIn}</p><p>AM Out: ${lastAMOut}</p>`;
           buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
                           <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>`;
       }
+      
       if (todaysSchedule === 'PM' || todaysSchedule === 'Both') {
+          const lastPMIn = student.lastPMIn
+            ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString()
+            : "N/A";
+          const lastPMOut = student.lastPMOut
+            ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString()
+            : "N/A";
+          timestampsHtml += `<p>PM In: ${lastPMIn}</p><p>PM Out: ${lastPMOut}</p>`;
           buttonsHtml += `<button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
                           <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
+      }
+
+      // If no schedule is set for today, show all timestamps and buttons
+      if (!todaysSchedule && isScheduled) {
+        const lastAMIn = student.lastAMIn
+          ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
+          : "N/A";
+        const lastAMOut = student.lastAMOut
+          ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString()
+          : "N/A";
+        const lastPMIn = student.lastPMIn
+          ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString()
+          : "N/A";
+        const lastPMOut = student.lastPMOut
+          ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString()
+          : "N/A";
+        timestampsHtml += `<p>AM In: ${lastAMIn}</p><p>AM Out: ${lastAMOut}</p><p>PM In: ${lastPMIn}</p><p>PM Out: ${lastPMOut}</p>`;
+        buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
+                        <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>
+                        <button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
+                        <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
       }
   
       studentCard.innerHTML = `
         <div class="student-info">
           <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
-          <p>AM In: ${lastAMIn}</p>
-          <p>AM Out: ${lastAMOut}</p>
-          <p>PM In: ${lastPMIn}</p>
-          <p>PM Out: ${lastPMOut}</p>
+          ${timestampsHtml}
         </div>
         <div class="action-buttons">
           ${buttonsHtml}
