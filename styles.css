@@ -172,16 +172,6 @@ body {
     color: white;
 }
 
-.status-badge.absent {
-    background-color: #ff6347;
-    color: white;
-}
-
-.status-badge.not-scheduled {
-    background-color: #cccccc;
-    color: #333333;
-}
-
 .action-buttons button {
     padding: 8px 12px;
     border: none;
