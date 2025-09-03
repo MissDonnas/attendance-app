@@ -201,37 +201,37 @@ header {
 }
 
 .report-card {
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  margin-bottom: 10px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    margin-bottom: 10px;
 }
 
 .report-header {
-  background-color: #f0f0f0;
-  padding: 10px;
-  cursor: pointer;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
+    background-color: #f0f0f0;
+    padding: 10px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
 }
 
 .report-content {
-  padding: 10px;
-  display: none;
+    padding: 10px;
+    display: none;
 }
 
 .report-content h4 {
-  margin-top: 0;
+    margin-top: 0;
 }
 
 .report-content ul {
-  list-style-type: none;
-  padding: 0;
+    list-style-type: none;
+    padding: 0;
 }
 
 .report-content li {
-  padding: 5px 0;
-  border-bottom: 1px solid #eee;
+    padding: 5px 0;
+    border-bottom: 1px solid #eee;
 }
 
 /* New styles for the bus buttons */
