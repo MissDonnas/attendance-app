@@ -156,6 +156,11 @@ header {
     background-color: #ffc107;
 }
 
+/* Updated to make the absent status badge red */
+.absent {
+    background-color: #dc3545;
+}
+
 .not-scheduled {
     background-color: #6c757d;
 }
