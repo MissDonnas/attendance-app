@@ -20,20 +20,30 @@ const contentContainer = document.getElementById("content-container");
 
 // Helper function to check if a student is scheduled for today
 function isScheduledToday(studentSchedule) {
-  if (!Array.isArray(studentSchedule) || studentSchedule.length === 0) {
-    return true;
+  if (!studentSchedule) {
+    return true; // Assume scheduled if no schedule is set
   }
+
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
 
-  const lowerCaseSchedule = studentSchedule.map(day => {
-    if (typeof day === 'string') {
-      return day.trim().toLowerCase();
-    }
-    return '';
-  }).filter(Boolean);
-
-  return lowerCaseSchedule.includes(today.toLowerCase());
+  // Check if the current day exists in the schedule object
+  if (typeof studentSchedule === 'object' && studentSchedule.hasOwnProperty(today)) {
+    return true;
+  }
+  
+  // For other collections, check if the day is in the array
+  if (Array.isArray(studentSchedule)) {
+    const lowerCaseSchedule = studentSchedule.map(day => {
+      if (typeof day === 'string') {
+        return day.trim().toLowerCase();
+      }
+      return '';
+    }).filter(Boolean);
+    return lowerCaseSchedule.includes(today.toLowerCase());
+  }
+  
+  return false;
 }
 
 // Function to render a specific page
@@ -238,6 +248,9 @@ function displayBusStudents(students, classroom, searchTerm = '') {
     let presentCount = 0;
     let absentCount = 0;
   
+    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+    const today = daysOfWeek[new Date().getDay()];
+
     filteredStudents.forEach(({ student, studentId }) => {
       totalCount++; 
       if (student.checkedIn) {
@@ -267,11 +280,13 @@ function displayBusStudents(students, classroom, searchTerm = '') {
       studentCard.className = "student-card";
   
       let buttonsHtml = "";
-      if (student.schedule && student.schedule.includes('AM')) {
+      const todaysSchedule = student.schedule ? student.schedule[today] : null;
+
+      if (todaysSchedule === 'AM' || todaysSchedule === 'Both') {
           buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
                           <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>`;
       }
-      if (student.schedule && student.schedule.includes('PM')) {
+      if (todaysSchedule === 'PM' || todaysSchedule === 'Both') {
           buttonsHtml += `<button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
                           <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
       }
