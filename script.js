@@ -66,8 +66,8 @@ function showPage(pageName) {
     case "busses":
         renderBusPage("busstudents");
         break;
-    case "allstudents":
-        renderAllStudentsPage();
+    case "fullday":
+        renderFullDayPage();
         break;
     case "pastattendance":
       renderPastAttendancePage();
@@ -345,8 +345,8 @@ function displayBusStudents(students, classroom, searchTerm = '') {
     document.getElementById("absent-count").textContent = absentCount;
 }
   
-// **New function to render the All Students page**
-async function renderAllStudentsPage() {
+// **Updated function to render the Full Day page**
+async function renderFullDayPage() {
     const today = new Date();
     const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
     const formattedDate = today.toLocaleDateString('en-US', dateOptions);
@@ -356,7 +356,7 @@ async function renderAllStudentsPage() {
             <div id="date-display">${formattedDate}</div>
         </div>
         <div id="student-header">
-            <h2>ALL STUDENTS</h2>
+            <h2>FULL DAY</h2>
             <input type="text" id="search-bar" placeholder="Search students..." />
         </div>
         <div id="student-list"></div>
@@ -365,18 +365,19 @@ async function renderAllStudentsPage() {
     const studentListDiv = document.getElementById("student-list");
     const searchBar = document.getElementById("search-bar");
 
-    const allStudentsData = await fetchAllStudents();
-    displayAllStudents(allStudentsData, studentListDiv);
+    const allStudentsData = await fetchFullDayStudents();
+    displayFullDayStudents(allStudentsData, studentListDiv);
 
     searchBar.addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase();
         const filteredStudents = allStudentsData.filter(student => student.name.toLowerCase().includes(searchTerm));
-        displayAllStudents(filteredStudents, studentListDiv);
+        displayFullDayStudents(filteredStudents, studentListDiv);
     });
 }
   
-async function fetchAllStudents() {
-    const collections = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+// **Updated function to fetch only Full Day students**
+async function fetchFullDayStudents() {
+    const collections = ['classroom1', 'classroom2', 'classroom3'];
     const studentsBySharedId = new Map();
 
     for (const collectionName of collections) {
@@ -392,7 +393,6 @@ async function fetchAllStudents() {
                     classroom: collectionName
                 });
             } else {
-                // If the student already exists, merge data.
                 const existingStudent = studentsBySharedId.get(sharedId);
                 const updatedStudent = { ...existingStudent, ...student };
                 studentsBySharedId.set(sharedId, updatedStudent);
@@ -405,7 +405,8 @@ async function fetchAllStudents() {
     return allStudents;
 }
   
-function displayAllStudents(students, container) {
+// **Updated display function for Full Day students**
+function displayFullDayStudents(students, container) {
     container.innerHTML = "";
     students.forEach(student => {
         let attendanceStatus;
@@ -431,7 +432,7 @@ function displayAllStudents(students, container) {
             <div class="student-info">
                 <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
                 <p>Classroom: ${student.classroom.toUpperCase().replace("-", " ")}</p>
-                </div>
+            </div>
         `;
         container.appendChild(studentCard);
     });
