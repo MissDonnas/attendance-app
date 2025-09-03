@@ -245,36 +245,24 @@ header {
     transition: background-color 0.3s ease;
 }
 
-.am-in-button {
-    background-color: #2196f3; /* Light Blue */
-}
-
-.am-in-button:hover {
-    background-color: #0b7dda;
-}
-
-.am-out-button {
-    background-color: #9c27b0; /* Purple */
-}
-
-.am-out-button:hover {
-    background-color: #7b1fa2;
-}
-
+.am-in-button,
 .pm-in-button {
-    background-color: #4caf50; /* Green */
+    background-color: #007bff; /* Blue for check-ins */
 }
 
+.am-in-button:hover,
 .pm-in-button:hover {
-    background-color: #388e3c;
+    background-color: #0056b3;
 }
 
+.am-out-button,
 .pm-out-button {
-    background-color: #f44336; /* Red */
+    background-color: #6c757d; /* Grey for check-outs */
 }
 
+.am-out-button:hover,
 .pm-out-button:hover {
-    background-color: #d32f2f;
+    background-color: #5a6268;
 }
 
 /* --- Mobile Styles --- */
