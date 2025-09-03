@@ -311,6 +311,9 @@ function displayBusStudents(students, classroom, searchTerm = '') {
                         <button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
                         <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
       }
+
+      const studentCard = document.createElement("div");
+      studentCard.className = "student-card";
   
       studentCard.innerHTML = `
         <div class="student-info">
