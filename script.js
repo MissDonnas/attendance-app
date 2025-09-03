@@ -366,7 +366,7 @@ async function updateBusStudentStatus(classroom, studentId, eventType) {
     }
 }
 
-// Function to display and filter past attendance
+// Function to display and filter past attendance with full timestamps
 function displayPastAttendance(allReports, searchTerm = '') {
   const listDiv = document.getElementById("past-attendance-list");
   listDiv.innerHTML = "";
@@ -376,48 +376,68 @@ function displayPastAttendance(allReports, searchTerm = '') {
   allReports.forEach((doc) => {
     const report = doc.data();
     
-    let shouldDisplay = false;
-    const classrooms = ['daycare', 'classroom1', 'classroom2', 'classroom3'];
-    for (const classroom of classrooms) {
-      if (report[classroom].some(student => student.name.toLowerCase().includes(lowerCaseSearchTerm))) {
-        shouldDisplay = true;
-        break;
+    // Convert report timestamp to a readable date
+    const reportDate = new Date(report.timestamp.seconds * 1000).toLocaleDateString();
+
+    const reportCard = document.createElement("div");
+    reportCard.className = "report-card";
+    
+    const header = document.createElement("div");
+    header.className = "report-header";
+    header.innerHTML = `<h3>Attendance Report for ${reportDate}</h3>`;
+    
+    const content = document.createElement("div");
+    content.className = "report-content";
+    content.style.display = 'none';
+
+    let contentHtml = '';
+    const classrooms = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+    
+    let shouldDisplay = false; // Flag to check if any student matches the search term
+
+    classrooms.forEach(classroom => {
+      // Find the specific report for this classroom
+      const classroomReport = report[classroom];
+
+      if (classroomReport) {
+        // Filter students within the report for the search term
+        const filteredStudents = classroomReport.filter(student => student.name.toLowerCase().includes(lowerCaseSearchTerm));
+        if (filteredStudents.length > 0) {
+          shouldDisplay = true; // At least one student matches the search term
+          contentHtml += `<h4>${classroom.toUpperCase().replace("-", " ")}</h4>`;
+          contentHtml += `<table class="report-table">`;
+          
+          if (classroom === 'busstudents') {
+            contentHtml += `<thead><tr><th>Name</th><th>Status</th><th>AM In</th><th>AM Out</th><th>PM In</th><th>PM Out</th></tr></thead>`;
+          } else {
+            contentHtml += `<thead><tr><th>Name</th><th>Status</th><th>Last Check In</th><th>Last Check Out</th><th>Last Sunscreen</th></tr></thead>`;
+          }
+          
+          contentHtml += `<tbody>`;
+          
+          filteredStudents.forEach(student => {
+            contentHtml += `<tr><td>${student.name}</td><td>${student.status}</td>`;
+            if (classroom === 'busstudents') {
+              contentHtml += `<td>${student.lastAMIn || 'N/A'}</td>`;
+              contentHtml += `<td>${student.lastAMOut || 'N/A'}</td>`;
+              contentHtml += `<td>${student.lastPMIn || 'N/A'}</td>`;
+              contentHtml += `<td>${student.lastPMOut || 'N/A'}</td>`;
+            } else {
+              contentHtml += `<td>${student.lastCheckIn || 'N/A'}</td>`;
+              contentHtml += `<td>${student.lastCheckOut || 'N/A'}</td>`;
+              contentHtml += `<td>${student.lastSunscreen || 'N/A'}</td>`;
+            }
+            contentHtml += `</tr>`;
+          });
+          
+          contentHtml += `</tbody></table>`;
+        }
       }
-    }
+    });
+
+    content.innerHTML = contentHtml;
 
     if (shouldDisplay) {
-      const reportDate = new Date(report.timestamp.seconds * 1000).toLocaleDateString();
-
-      const reportCard = document.createElement("div");
-      reportCard.className = "report-card";
-      
-      const header = document.createElement("div");
-      header.className = "report-header";
-      header.innerHTML = `<h3>Attendance Report for ${reportDate}</h3>`;
-      
-      const content = document.createElement("div");
-      content.className = "report-content";
-      content.style.display = 'none';
-
-      content.innerHTML = `
-        <h4>Daycare</h4>
-        <ul>
-          ${report.daycare.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-        </ul>
-        <h4>Classroom 1</h4>
-        <ul>
-          ${report.classroom1.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-        </ul>
-        <h4>Classroom 2</h4>
-        <ul>
-          ${report.classroom2.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-        </ul>
-        <h4>Classroom 3</h4>
-        <ul>
-          ${report.classroom3.map(student => `<li>${student.name}: ${student.status}</li>`).join('')}
-        </ul>
-      `;
-
       header.onclick = () => {
         content.style.display = content.style.display === 'none' ? 'block' : 'none';
       };
@@ -433,7 +453,7 @@ function displayPastAttendance(allReports, searchTerm = '') {
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
     <h2>Past Attendance Records</h2>
-    <input type="text" id="past-attendance-search-bar" placeholder="Search by date..." />
+    <input type="text" id="past-attendance-search-bar" placeholder="Search by name..." />
     <div id="past-attendance-list"></div>
   `;
 
@@ -566,7 +586,14 @@ async function saveAllAsPDF() {
       
       attendanceRecords.push({
         name: student.name,
-        status: status
+        status: status,
+        lastCheckIn: student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : null,
+        lastCheckOut: student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : null,
+        lastSunscreen: student.lastSunscreen ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString() : null,
+        lastAMIn: student.lastAMIn ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString() : null,
+        lastAMOut: student.lastAMOut ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString() : null,
+        lastPMIn: student.lastPMIn ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString() : null,
+        lastPMOut: student.lastPMOut ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString() : null,
       });
     });
 
