@@ -66,6 +66,9 @@ function showPage(pageName) {
     case "busses":
         renderBusPage("busstudents");
         break;
+    case "allstudents":
+        renderAllStudentsPage();
+        break;
     case "pastattendance":
       renderPastAttendancePage();
       break;
@@ -142,15 +145,25 @@ function displayStudents(students, classroom, searchTerm = '') {
 
   filteredStudents.forEach(({ student, studentId }) => {
     totalCount++; 
+    
+    let attendanceStatus;
+    let statusClass;
+
     if (student.checkedIn) {
       presentCount++;
+      attendanceStatus = 'Present';
+      statusClass = 'checked-in';
     } else {
       absentCount++;
+      if (student.lastCheckOut) {
+        attendanceStatus = 'Checked Out';
+        statusClass = 'checked-out';
+      } else {
+        const isScheduled = isScheduledToday(student.schedule);
+        attendanceStatus = isScheduled ? 'Absent' : 'Not Scheduled';
+        statusClass = isScheduled ? 'absent' : 'not-scheduled';
+      }
     }
-
-    const isScheduled = isScheduledToday(student.schedule);
-    const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
-    const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
     
     const lastCheckInTimestamp = student.lastCheckIn
       ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
@@ -330,6 +343,98 @@ function displayBusStudents(students, classroom, searchTerm = '') {
     document.getElementById("total-count").textContent = totalCount;
     document.getElementById("present-count").textContent = presentCount;
     document.getElementById("absent-count").textContent = absentCount;
+}
+  
+// **New function to render the All Students page**
+async function renderAllStudentsPage() {
+    const today = new Date();
+    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+
+    contentContainer.innerHTML = `
+        <div id="info-header">
+            <div id="date-display">${formattedDate}</div>
+        </div>
+        <div id="student-header">
+            <h2>ALL STUDENTS</h2>
+            <input type="text" id="search-bar" placeholder="Search students..." />
+        </div>
+        <div id="student-list"></div>
+    `;
+
+    const studentListDiv = document.getElementById("student-list");
+    const searchBar = document.getElementById("search-bar");
+
+    const allStudentsData = await fetchAllStudents();
+    displayAllStudents(allStudentsData, studentListDiv);
+
+    searchBar.addEventListener("input", (e) => {
+        const searchTerm = e.target.value.toLowerCase();
+        const filteredStudents = allStudentsData.filter(student => student.name.toLowerCase().includes(searchTerm));
+        displayAllStudents(filteredStudents, studentListDiv);
+    });
+}
+  
+async function fetchAllStudents() {
+    const collections = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+    const studentsBySharedId = new Map();
+
+    for (const collectionName of collections) {
+        const snapshot = await getDocs(collection(db, collectionName));
+        snapshot.forEach(docSnap => {
+            const student = docSnap.data();
+            const sharedId = student.sharedId || docSnap.id;
+            
+            if (!studentsBySharedId.has(sharedId)) {
+                studentsBySharedId.set(sharedId, {
+                    ...student,
+                    id: docSnap.id,
+                    classroom: collectionName
+                });
+            } else {
+                // If the student already exists, merge data.
+                const existingStudent = studentsBySharedId.get(sharedId);
+                const updatedStudent = { ...existingStudent, ...student };
+                studentsBySharedId.set(sharedId, updatedStudent);
+            }
+        });
+    }
+
+    const allStudents = Array.from(studentsBySharedId.values());
+    allStudents.sort((a, b) => a.name.localeCompare(b.name));
+    return allStudents;
+}
+  
+function displayAllStudents(students, container) {
+    container.innerHTML = "";
+    students.forEach(student => {
+        let attendanceStatus;
+        let statusClass;
+
+        if (student.checkedIn) {
+            attendanceStatus = 'Present';
+            statusClass = 'checked-in';
+        } else {
+            if (student.lastCheckOut) {
+                attendanceStatus = 'Checked Out';
+                statusClass = 'checked-out';
+            } else {
+                const isScheduled = isScheduledToday(student.schedule);
+                attendanceStatus = isScheduled ? 'Absent' : 'Not Scheduled';
+                statusClass = isScheduled ? 'absent' : 'not-scheduled';
+            }
+        }
+
+        const studentCard = document.createElement("div");
+        studentCard.className = "student-card";
+        studentCard.innerHTML = `
+            <div class="student-info">
+                <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
+                <p>Classroom: ${student.classroom.toUpperCase().replace("-", " ")}</p>
+                </div>
+        `;
+        container.appendChild(studentCard);
+    });
 }
 
 // New centralized function to update student status
@@ -561,8 +666,14 @@ async function saveAllAsPDF() {
 
     studentsSnapshot.forEach((doc) => {
       const student = doc.data();
-      const isScheduled = isScheduledToday(student.schedule);
-      const status = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
+      let status;
+      if (student.checkedIn) {
+          status = 'Present';
+      } else if (student.lastCheckOut) {
+          status = 'Checked Out';
+      } else {
+          status = isScheduledToday(student.schedule) ? 'Absent' : 'Not Scheduled';
+      }
       
       // Handle the different data structure for bus students in the PDF
       if (pageName === 'busstudents') {
