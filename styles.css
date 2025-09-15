@@ -156,13 +156,12 @@ header {
     background-color: #ffc107;
 }
 
-/* Updated to make the absent status badge red */
-.absent {
-    background-color: #dc3545;
-}
-
 .not-scheduled {
     background-color: #6c757d;
+}
+
+.absent {
+    background-color: #dc3545;
 }
 
 .action-buttons {
@@ -268,6 +267,18 @@ header {
 .am-out-button:hover,
 .pm-out-button:hover {
     background-color: #5a6268;
+}
+
+/* New style for the bus schedule tag */
+.schedule-tag {
+  background-color: #6c757d;
+  color: white;
+  padding: 4px 8px;
+  border-radius: 12px;
+  font-size: 0.8em;
+  font-weight: bold;
+  margin-left: 5px;
+  text-transform: uppercase;
 }
 
 /* --- Mobile Styles --- */
