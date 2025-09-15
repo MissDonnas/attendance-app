@@ -277,6 +277,11 @@ function displayBusStudents(students, classroom, searchTerm = '') {
       const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
       
       const todaysSchedule = student.schedule ? student.schedule[today] : null;
+      let scheduleTag = '';
+      if (todaysSchedule) {
+        scheduleTag = `<span class="schedule-tag">${todaysSchedule}</span>`;
+      }
+      
       let timestampsHtml = '';
       let buttonsHtml = '';
 
@@ -330,7 +335,7 @@ function displayBusStudents(students, classroom, searchTerm = '') {
   
       studentCard.innerHTML = `
         <div class="student-info">
-          <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
+          <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span> ${scheduleTag}</h4>
           ${timestampsHtml}
         </div>
         <div class="action-buttons">
