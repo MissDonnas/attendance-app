@@ -589,6 +589,14 @@ function renderPastAttendancePage() {
       allReports.push(doc);
     });
 
+    
+    allReports.sort((a, b) => {
+      const dateA = a.data().timestamp?.seconds || 0;
+      const dateB = b.data().timestamp?.seconds || 0;
+      return dateB - dateA; 
+    });
+    
+
     displayPastAttendance(allReports);
 
     const searchBar = document.getElementById("past-attendance-search-bar");
@@ -597,7 +605,6 @@ function renderPastAttendancePage() {
     });
   });
 }
-
 // Centralized function to update a student's status across all collections
 async function updateStudentStatusBySharedId(sharedId, updateData) {
     if (!sharedId) {
