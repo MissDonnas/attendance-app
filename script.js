@@ -421,7 +421,7 @@ async function fetchFullDayStudents() {
     return allStudents;
 }
   
-// **Updated display function for Full Day students with buttons**
+// **Updated display function for Full Day students with buttons, timestamps, and sunscreen**
 function displayFullDayStudents(students, container) {
     container.innerHTML = "";
     students.forEach(student => {
@@ -442,12 +442,26 @@ function displayFullDayStudents(students, container) {
             }
         }
 
+        // Convert Firestore timestamps to readable local time strings safely
+        const lastCheckInTimestamp = student.lastCheckIn
+          ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
+          : "Never";
+        const lastCheckOutTimestamp = student.lastCheckOut
+          ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString()
+          : "Never";
+        const lastSunscreenTimestamp = student.lastSunscreen
+          ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString()
+          : "Never";
+
         const studentCard = document.createElement("div");
         studentCard.className = "student-card";
         studentCard.innerHTML = `
             <div class="student-info">
                 <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
                 <p>Classroom: ${student.classroom.toUpperCase().replace("-", " ")}</p>
+                <p>Last Check In: ${lastCheckInTimestamp}</p>
+                <p>Last Check Out: ${lastCheckOutTimestamp}</p>
+                <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
             </div>
             <div class="action-buttons">
                 <button class="check-in-button" onclick="checkIn('${student.classroom}', '${student.id}')">Check In</button>
