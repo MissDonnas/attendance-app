@@ -21,25 +21,22 @@ const contentContainer = document.getElementById("content-container");
 // Helper function to check if a student is scheduled for today
 function isScheduledToday(studentSchedule) {
   if (!studentSchedule) {
-    return true; // Assume scheduled if no schedule is set
+    return true; // Default to true if no schedule object exists
   }
 
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
 
-  // Check if the current day exists in the schedule object
-  if (typeof studentSchedule === 'object' && studentSchedule.hasOwnProperty(today)) {
-    return true;
+  // If schedule is a key-value object e.g. { Monday: "Both", Friday: "AM" }
+  if (typeof studentSchedule === 'object' && !Array.isArray(studentSchedule)) {
+    return studentSchedule.hasOwnProperty(today) && Boolean(studentSchedule[today]);
   }
   
-  // For other collections, check if the day is in the array
+  // If schedule is an array e.g. ["Monday", "Wednesday"]
   if (Array.isArray(studentSchedule)) {
-    const lowerCaseSchedule = studentSchedule.map(day => {
-      if (typeof day === 'string') {
-        return day.trim().toLowerCase();
-      }
-      return '';
-    }).filter(Boolean);
+    const lowerCaseSchedule = studentSchedule
+      .filter(day => typeof day === 'string')
+      .map(day => day.trim().toLowerCase());
     return lowerCaseSchedule.includes(today.toLowerCase());
   }
   
@@ -64,11 +61,11 @@ function showPage(pageName) {
       renderClassroomPage("classroom3");
       break;
     case "busses":
-        renderBusPage("busstudents");
-        break;
+      renderBusPage("busstudents");
+      break;
     case "fullday":
-        renderFullDayPage();
-        break;
+      renderFullDayPage();
+      break;
     case "pastattendance":
       renderPastAttendancePage();
       break;
@@ -124,15 +121,18 @@ function renderClassroomPage(classroom) {
 
     // Add search functionality
     const searchBar = document.getElementById("search-bar");
-    searchBar.addEventListener("input", (e) => {
-      displayStudents(allStudents, classroom, e.target.value);
-    });
+    if (searchBar) {
+      searchBar.addEventListener("input", (e) => {
+        displayStudents(allStudents, classroom, e.target.value);
+      });
+    }
   });
 }
 
 // Function to filter and display students and update counts for regular classrooms
 function displayStudents(students, classroom, searchTerm = '') {
   const studentListDiv = document.getElementById("student-list");
+  if (!studentListDiv) return;
   studentListDiv.innerHTML = "";
 
   const filteredStudents = students.filter(studentObj =>
@@ -194,284 +194,285 @@ function displayStudents(students, classroom, searchTerm = '') {
     studentListDiv.appendChild(studentCard);
   });
 
-  document.getElementById("total-count").textContent = totalCount;
-  document.getElementById("present-count").textContent = presentCount;
-  document.getElementById("absent-count").textContent = absentCount;
+  const totalElem = document.getElementById("total-count");
+  const presentElem = document.getElementById("present-count");
+  const absentElem = document.getElementById("absent-count");
+  if (totalElem) totalElem.textContent = totalCount;
+  if (presentElem) presentElem.textContent = presentCount;
+  if (absentElem) absentElem.textContent = absentCount;
 }
 
-// Function to render the new bus page
+// Function to render the bus page
 function renderBusPage(classroom) {
-    const today = new Date();
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const formattedDate = today.toLocaleDateString('en-US', dateOptions);
-  
-    contentContainer.innerHTML = `
-      <div id="info-header">
-        <div id="date-display">${formattedDate}</div>
-        <div class="totals-container">
-          <div class="total-card">
-            <h3 id="total-count">0</h3>
-            <p>Total</p>
-          </div>
-          <div class="total-card">
-            <h3 id="present-count">0</h3>
-            <p>Present</p>
-          </div>
-          <div class="total-card">
-            <h3 id="absent-count">0</h3>
-            <p>Absent</p>
-          </div>
+  const today = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+
+  contentContainer.innerHTML = `
+    <div id="info-header">
+      <div id="date-display">${formattedDate}</div>
+      <div class="totals-container">
+        <div class="total-card">
+          <h3 id="total-count">0</h3>
+          <p>Total</p>
         </div>
-        <div>
-          <button class="reset-button" onclick="resetAllData()">Reset All Data</button>
+        <div class="total-card">
+          <h3 id="present-count">0</h3>
+          <p>Present</p>
+        </div>
+        <div class="total-card">
+          <h3 id="absent-count">0</h3>
+          <p>Absent</p>
         </div>
       </div>
-      <div id="student-header">
-        <h2>BUS ATTENDANCE</h2>
-        <input type="text" id="search-bar" placeholder="Search students..." />
+      <div>
+        <button class="reset-button" onclick="resetAllData()">Reset All Data</button>
       </div>
-      <div id="student-list"></div>
-    `;
-  
-    onSnapshot(query(collection(db, classroom), orderBy("name")), (snapshot) => {
-      const allStudents = [];
-      snapshot.forEach((doc) => {
-        allStudents.push({ student: doc.data(), studentId: doc.id });
-      });
-      
-      displayBusStudents(allStudents, classroom);
-  
-      const searchBar = document.getElementById("search-bar");
+    </div>
+    <div id="student-header">
+      <h2>BUS ATTENDANCE</h2>
+      <input type="text" id="search-bar" placeholder="Search students..." />
+    </div>
+    <div id="student-list"></div>
+  `;
+
+  onSnapshot(query(collection(db, classroom), orderBy("name")), (snapshot) => {
+    const allStudents = [];
+    snapshot.forEach((doc) => {
+      allStudents.push({ student: doc.data(), studentId: doc.id });
+    });
+    
+    displayBusStudents(allStudents, classroom);
+
+    const searchBar = document.getElementById("search-bar");
+    if (searchBar) {
       searchBar.addEventListener("input", (e) => {
         displayBusStudents(allStudents, classroom, e.target.value);
       });
-    });
+    }
+  });
 }
-  
+
 // Function to display students for the bus page with conditional buttons and timestamps
 function displayBusStudents(students, classroom, searchTerm = '') {
-    const studentListDiv = document.getElementById("student-list");
-    studentListDiv.innerHTML = "";
-  
-    const filteredStudents = students.filter(studentObj =>
-      studentObj.student && studentObj.student.name && typeof studentObj.student.name === 'string' && studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  
-    let totalCount = 0;
-    let presentCount = 0;
-    let absentCount = 0;
-  
-    const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
-    const today = daysOfWeek[new Date().getDay()];
+  const studentListDiv = document.getElementById("student-list");
+  if (!studentListDiv) return;
+  studentListDiv.innerHTML = "";
 
-    filteredStudents.forEach(({ student, studentId }) => {
-      totalCount++; 
-      if (student.checkedIn) {
-        presentCount++;
-      } else {
-        absentCount++;
-      }
-  
-      const isScheduled = isScheduledToday(student.schedule);
-      const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
-      const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
-      
-      const todaysSchedule = student.schedule ? student.schedule[today] : null;
-      let scheduleTag = '';
-      if (todaysSchedule) {
-        scheduleTag = `<span class="schedule-tag">${todaysSchedule}</span>`;
-      }
-      
-      let timestampsHtml = '';
-      let buttonsHtml = '';
+  const filteredStudents = students.filter(studentObj =>
+    studentObj.student && studentObj.student.name && typeof studentObj.student.name === 'string' && studentObj.student.name.toLowerCase().includes(searchTerm.toLowerCase())
+  );
 
-      if (todaysSchedule === 'AM' || todaysSchedule === 'Both') {
-          const lastAMIn = student.lastAMIn
-            ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
-            : "N/A";
-          const lastAMOut = student.lastAMOut
-            ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString()
-            : "N/A";
-          timestampsHtml += `<p>AM In: ${lastAMIn}</p><p>AM Out: ${lastAMOut}</p>`;
-          buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
-                          <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>`;
-      }
-      
-      if (todaysSchedule === 'PM' || todaysSchedule === 'Both') {
-          const lastPMIn = student.lastPMIn
-            ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString()
-            : "N/A";
-          const lastPMOut = student.lastPMOut
-            ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString()
-            : "N/A";
-          timestampsHtml += `<p>PM In: ${lastPMIn}</p><p>PM Out: ${lastPMOut}</p>`;
-          buttonsHtml += `<button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
-                          <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
-      }
+  let totalCount = 0;
+  let presentCount = 0;
+  let absentCount = 0;
 
-      // If no schedule is set for today, show all timestamps and buttons
-      if (!todaysSchedule && isScheduled) {
+  const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+  const today = daysOfWeek[new Date().getDay()];
+
+  filteredStudents.forEach(({ student, studentId }) => {
+    totalCount++; 
+    if (student.checkedIn) {
+      presentCount++;
+    } else {
+      absentCount++;
+    }
+
+    const isScheduled = isScheduledToday(student.schedule);
+    const attendanceStatus = student.checkedIn ? 'Present' : (isScheduled ? 'Absent' : 'Not Scheduled');
+    const statusClass = student.checkedIn ? 'checked-in' : (isScheduled ? 'checked-out' : 'not-scheduled');
+    
+    const todaysSchedule = student.schedule ? student.schedule[today] : null;
+    let scheduleTag = '';
+    if (todaysSchedule) {
+      scheduleTag = `<span class="schedule-tag">${todaysSchedule}</span>`;
+    }
+    
+    let timestampsHtml = '';
+    let buttonsHtml = '';
+
+    if (todaysSchedule === 'AM' || todaysSchedule === 'Both') {
         const lastAMIn = student.lastAMIn
           ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
           : "N/A";
         const lastAMOut = student.lastAMOut
           ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString()
           : "N/A";
+        timestampsHtml += `<p>AM In: ${lastAMIn}</p><p>AM Out: ${lastAMOut}</p>`;
+        buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
+                        <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>`;
+    }
+    
+    if (todaysSchedule === 'PM' || todaysSchedule === 'Both') {
         const lastPMIn = student.lastPMIn
           ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString()
           : "N/A";
         const lastPMOut = student.lastPMOut
           ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString()
           : "N/A";
-        timestampsHtml += `<p>AM In: ${lastAMIn}</p><p>AM Out: ${lastAMOut}</p><p>PM In: ${lastPMIn}</p><p>PM Out: ${lastPMOut}</p>`;
-        buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
-                        <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>
-                        <button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
+        timestampsHtml += `<p>PM In: ${lastPMIn}</p><p>PM Out: ${lastPMOut}</p>`;
+        buttonsHtml += `<button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
                         <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
-      }
+    }
 
-      const studentCard = document.createElement("div");
-      studentCard.className = "student-card";
-  
-      studentCard.innerHTML = `
-        <div class="student-info">
-          <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span> ${scheduleTag}</h4>
-          ${timestampsHtml}
-        </div>
-        <div class="action-buttons">
-          ${buttonsHtml}
-        </div>
-      `;
-      studentListDiv.appendChild(studentCard);
-    });
-  
-    document.getElementById("total-count").textContent = totalCount;
-    document.getElementById("present-count").textContent = presentCount;
-    document.getElementById("absent-count").textContent = absentCount;
-}
-  
-// **Updated function to render the Full Day page**
-async function renderFullDayPage() {
-    const today = new Date();
-    const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-    const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+    // If no schedule is set for today, show all timestamps and buttons
+    if (!todaysSchedule && isScheduled) {
+      const lastAMIn = student.lastAMIn
+        ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
+        : "N/A";
+      const lastAMOut = student.lastAMOut
+        ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString()
+        : "N/A";
+      const lastPMIn = student.lastPMIn
+        ? new Date(student.lastPMIn.seconds * 1000).toLocaleTimeString()
+        : "N/A";
+      const lastPMOut = student.lastPMOut
+        ? new Date(student.lastPMOut.seconds * 1000).toLocaleTimeString()
+        : "N/A";
+      timestampsHtml += `<p>AM In: ${lastAMIn}</p><p>AM Out: ${lastAMOut}</p><p>PM In: ${lastPMIn}</p><p>PM Out: ${lastPMOut}</p>`;
+      buttonsHtml += `<button class="bus-button am-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amIn')">AM In</button>
+                      <button class="bus-button am-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'amOut')">AM Out</button>
+                      <button class="bus-button pm-in-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmIn')">PM In</button>
+                      <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
+    }
 
-    contentContainer.innerHTML = `
-        <div id="info-header">
-            <div id="date-display">${formattedDate}</div>
-        </div>
-        <div id="student-header">
-            <h2>FULL DAY STUDENTS</h2>
-            <input type="text" id="search-bar" placeholder="Search students..." />
-        </div>
-        <div id="student-list"></div>
+    const studentCard = document.createElement("div");
+    studentCard.className = "student-card";
+
+    studentCard.innerHTML = `
+      <div class="student-info">
+        <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span> ${scheduleTag}</h4>
+        ${timestampsHtml}
+      </div>
+      <div class="action-buttons">
+        ${buttonsHtml}
+      </div>
     `;
+    studentListDiv.appendChild(studentCard);
+  });
 
-    const studentListDiv = document.getElementById("student-list");
-    const searchBar = document.getElementById("search-bar");
+  const totalElem = document.getElementById("total-count");
+  const presentElem = document.getElementById("present-count");
+  const absentElem = document.getElementById("absent-count");
+  if (totalElem) totalElem.textContent = totalCount;
+  if (presentElem) presentElem.textContent = presentCount;
+  if (absentElem) absentElem.textContent = absentCount;
+}
 
-    const allStudentsData = await fetchFullDayStudents();
-    displayFullDayStudents(allStudentsData, studentListDiv);
+// Function to render the Full Day page
+async function renderFullDayPage() {
+  const today = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', dateOptions);
 
+  contentContainer.innerHTML = `
+      <div id="info-header">
+          <div id="date-display">${formattedDate}</div>
+      </div>
+      <div id="student-header">
+          <h2>FULL DAY STUDENTS</h2>
+          <input type="text" id="search-bar" placeholder="Search students..." />
+      </div>
+      <div id="student-list"></div>
+  `;
+
+  const studentListDiv = document.getElementById("student-list");
+  const searchBar = document.getElementById("search-bar");
+
+  const allStudentsData = await fetchFullDayStudents();
+  displayFullDayStudents(allStudentsData, studentListDiv);
+
+  if (searchBar) {
     searchBar.addEventListener("input", (e) => {
         const searchTerm = e.target.value.toLowerCase();
-        const filteredStudents = allStudentsData.filter(student => student.name.toLowerCase().includes(searchTerm));
+        const filteredStudents = allStudentsData.filter(student => 
+            student.name && student.name.toLowerCase().includes(searchTerm)
+        );
         displayFullDayStudents(filteredStudents, studentListDiv);
     });
+  }
 }
-  
-// **Updated function to fetch only Full Day students (excluding daycare)**
+
+// Function to fetch Full Day students from classrooms
 async function fetchFullDayStudents() {
     const fullDayCollections = ['classroom1', 'classroom2', 'classroom3'];
     const studentsBySharedId = new Map();
 
-    // First, get all students from the Daycare collection to create a set of sharedIds to exclude
-    const daycareStudentsSnapshot = await getDocs(collection(db, 'daycare'));
-    const daycareSharedIds = new Set();
-    daycareStudentsSnapshot.forEach(docSnap => {
-        daycareSharedIds.add(docSnap.data().sharedId);
-    });
-
-    // Now, fetch students from the full day collections
     for (const collectionName of fullDayCollections) {
         const snapshot = await getDocs(collection(db, collectionName));
         snapshot.forEach(docSnap => {
             const student = docSnap.data();
             const sharedId = student.sharedId || docSnap.id;
             
-            // Only add student if their sharedId is NOT in the daycare set
-            if (!daycareSharedIds.has(sharedId)) {
-                if (!studentsBySharedId.has(sharedId)) {
-                    studentsBySharedId.set(sharedId, {
-                        ...student,
-                        id: docSnap.id,
-                        classroom: collectionName
-                    });
-                } else {
-                    const existingStudent = studentsBySharedId.get(sharedId);
-                    const updatedStudent = { ...existingStudent, ...student };
-                    studentsBySharedId.set(sharedId, updatedStudent);
-                }
+            if (!studentsBySharedId.has(sharedId)) {
+                studentsBySharedId.set(sharedId, {
+                    ...student,
+                    id: docSnap.id,
+                    classroom: collectionName
+                });
+            } else {
+                const existingStudent = studentsBySharedId.get(sharedId);
+                studentsBySharedId.set(sharedId, { ...existingStudent, ...student });
             }
         });
     }
 
     const allStudents = Array.from(studentsBySharedId.values());
-    allStudents.sort((a, b) => a.name.localeCompare(b.name));
+    allStudents.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
     return allStudents;
 }
-  
+
 function displayFullDayStudents(students, container) {
-    container.innerHTML = "";
-    students.forEach(student => {
-        let attendanceStatus;
-        let statusClass;
+  if (!container) return;
+  container.innerHTML = "";
+  students.forEach(student => {
+      let attendanceStatus;
+      let statusClass;
 
-        if (student.checkedIn) {
-            attendanceStatus = 'Present';
-            statusClass = 'checked-in';
-        } else {
-            if (student.lastCheckOut) {
-                attendanceStatus = 'Checked Out';
-                statusClass = 'checked-out';
-            } else {
-                const isScheduled = isScheduledToday(student.schedule);
-                attendanceStatus = isScheduled ? 'Absent' : 'Not Scheduled';
-                statusClass = isScheduled ? 'absent' : 'not-scheduled';
-            }
-        }
+      if (student.checkedIn) {
+          attendanceStatus = 'Present';
+          statusClass = 'checked-in';
+      } else {
+          if (student.lastCheckOut) {
+              attendanceStatus = 'Checked Out';
+              statusClass = 'checked-out';
+          } else {
+              const isScheduled = isScheduledToday(student.schedule);
+              attendanceStatus = isScheduled ? 'Absent' : 'Not Scheduled';
+              statusClass = isScheduled ? 'absent' : 'not-scheduled';
+          }
+      }
 
-        // Convert Firestore timestamps to readable local time strings safely
-        const lastCheckInTimestamp = student.lastCheckIn
-          ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
-          : "Never";
-        const lastCheckOutTimestamp = student.lastCheckOut
-          ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString()
-          : "Never";
-        const lastSunscreenTimestamp = student.lastSunscreen
-          ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString()
-          : "Never";
+      const lastCheckInTimestamp = student.lastCheckIn
+        ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString()
+        : "Never";
+      const lastCheckOutTimestamp = student.lastCheckOut
+        ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString()
+        : "Never";
+      const lastSunscreenTimestamp = student.lastSunscreen
+        ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString()
+        : "Never";
 
-        const studentCard = document.createElement("div");
-        studentCard.className = "student-card";
-        studentCard.innerHTML = `
-            <div class="student-info">
-                <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
-                <p>Classroom: ${student.classroom.toUpperCase().replace("-", " ")}</p>
-                <p>Last Check In: ${lastCheckInTimestamp}</p>
-                <p>Last Check Out: ${lastCheckOutTimestamp}</p>
-                <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
-            </div>
-            <div class="action-buttons">
-                <button class="check-in-button" onclick="checkIn('${student.classroom}', '${student.id}')">Check In</button>
-                <button class="check-out-button" onclick="checkOut('${student.classroom}', '${student.id}')">Check Out</button>
-            </div>
-        `;
-        container.appendChild(studentCard);
-    });
+      const studentCard = document.createElement("div");
+      studentCard.className = "student-card";
+      studentCard.innerHTML = `
+          <div class="student-info">
+              <h4>${student.name} <span class="status-badge ${statusClass}">${attendanceStatus}</span></h4>
+              <p>Classroom: ${student.classroom ? student.classroom.toUpperCase().replace("-", " ") : 'N/A'}</p>
+              <p>Last Check In: ${lastCheckInTimestamp}</p>
+              <p>Last Check Out: ${lastCheckOutTimestamp}</p>
+              <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
+          </div>
+          <div class="action-buttons">
+              <button class="check-in-button" onclick="checkIn('${student.classroom}', '${student.id}')">Check In</button>
+              <button class="check-out-button" onclick="checkOut('${student.classroom}', '${student.id}')">Check Out</button>
+          </div>
+      `;
+      container.appendChild(studentCard);
+  });
 }
 
-// New centralized function to update student status
+// Function to update bus student status
 async function updateBusStudentStatus(classroom, studentId, eventType) {
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
@@ -505,18 +506,19 @@ async function updateBusStudentStatus(classroom, studentId, eventType) {
     }
 }
 
-// Function to display and filter past attendance with full timestamps
+// Function to display and filter past attendance
 function displayPastAttendance(allReports, searchTerm = '') {
   const listDiv = document.getElementById("past-attendance-list");
+  if (!listDiv) return;
   listDiv.innerHTML = "";
 
   const lowerCaseSearchTerm = searchTerm.toLowerCase();
 
   allReports.forEach((doc) => {
     const report = doc.data();
-    
-    // Convert report timestamp to a readable date
-    const reportDate = new Date(report.timestamp.seconds * 1000).toLocaleDateString();
+    const reportDate = report.timestamp 
+      ? new Date(report.timestamp.seconds * 1000).toLocaleDateString()
+      : "Unknown Date";
 
     const reportCard = document.createElement("div");
     reportCard.className = "report-card";
@@ -531,18 +533,17 @@ function displayPastAttendance(allReports, searchTerm = '') {
 
     let contentHtml = '';
     const classrooms = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
-    
-    let shouldDisplay = false; // Flag to check if any student matches the search term
+    let shouldDisplay = false;
 
     classrooms.forEach(classroom => {
-      // Find the specific report for this classroom
       const classroomReport = report[classroom];
 
       if (classroomReport) {
-        // Filter students within the report for the search term
-        const filteredStudents = classroomReport.filter(student => student.name.toLowerCase().includes(lowerCaseSearchTerm));
+        const filteredStudents = classroomReport.filter(student => 
+          student.name && student.name.toLowerCase().includes(lowerCaseSearchTerm)
+        );
         if (filteredStudents.length > 0) {
-          shouldDisplay = true; // At least one student matches the search term
+          shouldDisplay = true;
           contentHtml += `<h4>${classroom.toUpperCase().replace("-", " ")}</h4>`;
           contentHtml += `<table class="report-table">`;
           
@@ -588,7 +589,7 @@ function displayPastAttendance(allReports, searchTerm = '') {
   });
 }
 
-// Updated function to render the Past Attendance page
+// Function to render the Past Attendance page
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
     <h2>Past Attendance Records</h2>
@@ -602,22 +603,23 @@ function renderPastAttendancePage() {
       allReports.push(doc);
     });
 
-    
     allReports.sort((a, b) => {
       const dateA = a.data().timestamp?.seconds || 0;
       const dateB = b.data().timestamp?.seconds || 0;
       return dateB - dateA; 
     });
-    
 
     displayPastAttendance(allReports);
 
     const searchBar = document.getElementById("past-attendance-search-bar");
-    searchBar.addEventListener("input", (e) => {
-      displayPastAttendance(allReports, e.target.value);
-    });
+    if (searchBar) {
+      searchBar.addEventListener("input", (e) => {
+        displayPastAttendance(allReports, e.target.value);
+      });
+    }
   });
 }
+
 // Centralized function to update a student's status across all collections
 async function updateStudentStatusBySharedId(sharedId, updateData) {
     if (!sharedId) {
@@ -716,10 +718,9 @@ async function saveAllAsPDF() {
           status = isScheduledToday(student.schedule) ? 'Absent' : 'Not Scheduled';
       }
       
-      // Handle the different data structure for bus students in the PDF
       if (pageName === 'busstudents') {
           studentData.push([
-              student.name,
+              student.name || 'Unknown',
               status,
               student.lastAMIn ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString() : 'N/A',
               student.lastAMOut ? new Date(student.lastAMOut.seconds * 1000).toLocaleTimeString() : 'N/A',
@@ -728,7 +729,7 @@ async function saveAllAsPDF() {
           ]);
       } else {
           studentData.push([
-              student.name,
+              student.name || 'Unknown',
               status,
               student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : 'N/A',
               student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : 'N/A',
@@ -737,7 +738,7 @@ async function saveAllAsPDF() {
       }
       
       attendanceRecords.push({
-        name: student.name,
+        name: student.name || 'Unknown',
         status: status,
         lastCheckIn: student.lastCheckIn ? new Date(student.lastCheckIn.seconds * 1000).toLocaleTimeString() : null,
         lastCheckOut: student.lastCheckOut ? new Date(student.lastCheckOut.seconds * 1000).toLocaleTimeString() : null,
@@ -807,13 +808,13 @@ async function resetAllData() {
   }
 }
 
-// This makes the functions available to the HTML's onclick attributes
+// Global exports
 window.showPage = showPage;
 window.checkIn = checkIn;
 window.checkOut = checkOut;
 window.applySunscreen = applySunscreen;
 window.saveAllAsPDF = saveAllAsPDF;
 window.resetAllData = resetAllData;
-window.updateBusStudentStatus = updateBusStudentStatus; // Expose new function
+window.updateBusStudentStatus = updateBusStudentStatus;
 
 showPage("daycare");
