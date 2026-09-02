@@ -421,7 +421,6 @@ async function fetchFullDayStudents() {
     return allStudents;
 }
   
-// **Updated display function for Full Day students with buttons, timestamps, and sunscreen**
 function displayFullDayStudents(students, container) {
     container.innerHTML = "";
     students.forEach(student => {
