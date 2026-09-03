@@ -27,12 +27,10 @@ function isScheduledToday(studentSchedule) {
   const daysOfWeek = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
   const today = daysOfWeek[new Date().getDay()];
 
-  // If schedule is a key-value object e.g. { Monday: "Both", Friday: "AM" }
   if (typeof studentSchedule === 'object' && !Array.isArray(studentSchedule)) {
     return studentSchedule.hasOwnProperty(today) && Boolean(studentSchedule[today]);
   }
   
-  // If schedule is an array e.g. ["Monday", "Wednesday"]
   if (Array.isArray(studentSchedule)) {
     const lowerCaseSchedule = studentSchedule
       .filter(day => typeof day === 'string')
@@ -49,7 +47,7 @@ function showPage(pageName) {
 
   switch (pageName) {
     case "daycare":
-      renderClassroomPage("daycare");
+      renderDaycarePage();
       break;
     case "classroom1":
       renderClassroomPage("classroom1");
@@ -70,12 +68,134 @@ function showPage(pageName) {
       renderPastAttendancePage();
       break;
     default:
-      renderClassroomPage("daycare");
+      renderDaycarePage();
       break;
   }
 }
 
-// Function to render a classroom page
+// Helper to compile students across classrooms 1-3 sorted by sharedId
+async function fetchClassroomStudentsSorted() {
+  const classroomCollections = ['classroom1', 'classroom2', 'classroom3'];
+  const daycareStudentsMap = new Map();
+  const fullDayStudentsMap = new Map();
+
+  for (const collectionName of classroomCollections) {
+    const snapshot = await getDocs(collection(db, collectionName));
+    snapshot.forEach((docSnap) => {
+      const student = docSnap.data();
+      const docId = docSnap.id;
+      const hasSharedId = student.sharedId && String(student.sharedId).trim() !== "";
+      
+      const studentData = {
+        ...student,
+        id: docId,
+        classroom: collectionName
+      };
+
+      if (hasSharedId) {
+        // Shared ID present -> Daycare Student
+        const key = student.sharedId;
+        if (!daycareStudentsMap.has(key)) {
+          daycareStudentsMap.set(key, studentData);
+        } else {
+          const existing = daycareStudentsMap.get(key);
+          daycareStudentsMap.set(key, { ...existing, ...studentData });
+        }
+      } else {
+        // No Shared ID -> Full Day Student
+        if (!fullDayStudentsMap.has(docId)) {
+          fullDayStudentsMap.set(docId, studentData);
+        }
+      }
+    });
+  }
+
+  const daycareStudents = Array.from(daycareStudentsMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+  const fullDayStudents = Array.from(fullDayStudentsMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
+
+  return { daycareStudents, fullDayStudents };
+}
+
+// Render Daycare Page (Students from classrooms 1-3 WITH sharedId)
+async function renderDaycarePage() {
+  const today = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+
+  contentContainer.innerHTML = `
+    <div id="info-header">
+      <div id="date-display">${formattedDate}</div>
+      <div class="totals-container">
+        <div class="total-card">
+          <h3 id="total-count">0</h3>
+          <p>Total</p>
+        </div>
+        <div class="total-card">
+          <h3 id="present-count">0</h3>
+          <p>Present</p>
+        </div>
+        <div class="total-card">
+          <h3 id="absent-count">0</h3>
+          <p>Absent</p>
+        </div>
+      </div>
+      <div>
+        <button class="reset-button" onclick="resetAllData()">Reset All Data</button>
+      </div>
+    </div>
+    <div id="student-header">
+      <h2>DAYCARE STUDENTS</h2>
+      <input type="text" id="search-bar" placeholder="Search students..." />
+    </div>
+    <div id="student-list"></div>
+  `;
+
+  const { daycareStudents } = await fetchClassroomStudentsSorted();
+  const formattedDaycareList = daycareStudents.map(student => ({ student, studentId: student.id }));
+  
+  displayStudents(formattedDaycareList, "daycare");
+
+  const searchBar = document.getElementById("search-bar");
+  if (searchBar) {
+    searchBar.addEventListener("input", (e) => {
+      displayStudents(formattedDaycareList, "daycare", e.target.value);
+    });
+  }
+}
+
+// Render Full Day Page (Students from classrooms 1-3 WITHOUT sharedId)
+async function renderFullDayPage() {
+  const today = new Date();
+  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+  const formattedDate = today.toLocaleDateString('en-US', dateOptions);
+
+  contentContainer.innerHTML = `
+    <div id="info-header">
+      <div id="date-display">${formattedDate}</div>
+    </div>
+    <div id="student-header">
+      <h2>FULL DAY STUDENTS</h2>
+      <input type="text" id="search-bar" placeholder="Search students..." />
+    </div>
+    <div id="student-list"></div>
+  `;
+
+  const studentListDiv = document.getElementById("student-list");
+  const searchBar = document.getElementById("search-bar");
+
+  const { fullDayStudents } = await fetchClassroomStudentsSorted();
+  displayFullDayStudents(fullDayStudents, studentListDiv);
+
+  if (searchBar) {
+    searchBar.addEventListener("input", (e) => {
+      const searchTerm = e.target.value.toLowerCase();
+      const filtered = fullDayStudents.filter(s => s.name && s.name.toLowerCase().includes(searchTerm));
+      displayFullDayStudents(filtered, studentListDiv);
+    });
+  }
+}
+
+// Function to render standard classroom pages (classroom1, classroom2, classroom3)
 function renderClassroomPage(classroom) {
   const today = new Date();
   const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -109,17 +229,14 @@ function renderClassroomPage(classroom) {
     <div id="student-list"></div>
   `;
 
-  // Fetch student data from Firebase, sorted by name
   onSnapshot(query(collection(db, classroom), orderBy("name")), (snapshot) => {
     const allStudents = [];
     snapshot.forEach((doc) => {
       allStudents.push({ student: doc.data(), studentId: doc.id });
     });
     
-    // Initial display of all students
     displayStudents(allStudents, classroom);
 
-    // Add search functionality
     const searchBar = document.getElementById("search-bar");
     if (searchBar) {
       searchBar.addEventListener("input", (e) => {
@@ -129,7 +246,7 @@ function renderClassroomPage(classroom) {
   });
 }
 
-// Function to filter and display students and update counts for regular classrooms
+// Function to filter and display students for standard classroom views & daycare
 function displayStudents(students, classroom, searchTerm = '') {
   const studentListDiv = document.getElementById("student-list");
   if (!studentListDiv) return;
@@ -175,6 +292,8 @@ function displayStudents(students, classroom, searchTerm = '') {
       ? new Date(student.lastSunscreen.seconds * 1000).toLocaleTimeString()
       : "Never";
 
+    const targetClassroom = student.classroom || classroom;
+
     const studentCard = document.createElement("div");
     studentCard.className = "student-card";
 
@@ -186,9 +305,9 @@ function displayStudents(students, classroom, searchTerm = '') {
         <p>Last Sunscreen: ${lastSunscreenTimestamp}</p>
       </div>
       <div class="action-buttons">
-        <button class="check-in-button" onclick="checkIn('${classroom}', '${studentId}')">Check In</button>
-        <button class="check-out-button" onclick="checkOut('${classroom}', '${studentId}')">Check Out</button>
-        <button class="sunscreen-button" onclick="applySunscreen('${classroom}', '${studentId}')">Sunscreen</button>
+        <button class="check-in-button" onclick="checkIn('${targetClassroom}', '${studentId}')">Check In</button>
+        <button class="check-out-button" onclick="checkOut('${targetClassroom}', '${studentId}')">Check Out</button>
+        <button class="sunscreen-button" onclick="applySunscreen('${targetClassroom}', '${studentId}')">Sunscreen</button>
       </div>
     `;
     studentListDiv.appendChild(studentCard);
@@ -253,7 +372,6 @@ function renderBusPage(classroom) {
   });
 }
 
-// Function to display students for the bus page with conditional buttons and timestamps
 function displayBusStudents(students, classroom, searchTerm = '') {
   const studentListDiv = document.getElementById("student-list");
   if (!studentListDiv) return;
@@ -315,7 +433,6 @@ function displayBusStudents(students, classroom, searchTerm = '') {
                         <button class="bus-button pm-out-button" onclick="updateBusStudentStatus('${classroom}', '${studentId}', 'pmOut')">PM Out</button>`;
     }
 
-    // If no schedule is set for today, show all timestamps and buttons
     if (!todaysSchedule && isScheduled) {
       const lastAMIn = student.lastAMIn
         ? new Date(student.lastAMIn.seconds * 1000).toLocaleTimeString()
@@ -357,69 +474,6 @@ function displayBusStudents(students, classroom, searchTerm = '') {
   if (totalElem) totalElem.textContent = totalCount;
   if (presentElem) presentElem.textContent = presentCount;
   if (absentElem) absentElem.textContent = absentCount;
-}
-
-// Function to render the Full Day page
-async function renderFullDayPage() {
-  const today = new Date();
-  const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
-  const formattedDate = today.toLocaleDateString('en-US', dateOptions);
-
-  contentContainer.innerHTML = `
-      <div id="info-header">
-          <div id="date-display">${formattedDate}</div>
-      </div>
-      <div id="student-header">
-          <h2>FULL DAY STUDENTS</h2>
-          <input type="text" id="search-bar" placeholder="Search students..." />
-      </div>
-      <div id="student-list"></div>
-  `;
-
-  const studentListDiv = document.getElementById("student-list");
-  const searchBar = document.getElementById("search-bar");
-
-  const allStudentsData = await fetchFullDayStudents();
-  displayFullDayStudents(allStudentsData, studentListDiv);
-
-  if (searchBar) {
-    searchBar.addEventListener("input", (e) => {
-        const searchTerm = e.target.value.toLowerCase();
-        const filteredStudents = allStudentsData.filter(student => 
-            student.name && student.name.toLowerCase().includes(searchTerm)
-        );
-        displayFullDayStudents(filteredStudents, studentListDiv);
-    });
-  }
-}
-
-// Function to fetch Full Day students from classrooms
-async function fetchFullDayStudents() {
-    const fullDayCollections = ['classroom1', 'classroom2', 'classroom3'];
-    const studentsBySharedId = new Map();
-
-    for (const collectionName of fullDayCollections) {
-        const snapshot = await getDocs(collection(db, collectionName));
-        snapshot.forEach(docSnap => {
-            const student = docSnap.data();
-            const sharedId = student.sharedId || docSnap.id;
-            
-            if (!studentsBySharedId.has(sharedId)) {
-                studentsBySharedId.set(sharedId, {
-                    ...student,
-                    id: docSnap.id,
-                    classroom: collectionName
-                });
-            } else {
-                const existingStudent = studentsBySharedId.get(sharedId);
-                studentsBySharedId.set(sharedId, { ...existingStudent, ...student });
-            }
-        });
-    }
-
-    const allStudents = Array.from(studentsBySharedId.values());
-    allStudents.sort((a, b) => (a.name || '').localeCompare(b.name || ''));
-    return allStudents;
 }
 
 function displayFullDayStudents(students, container) {
@@ -472,7 +526,6 @@ function displayFullDayStudents(students, container) {
   });
 }
 
-// Function to update bus student status
 async function updateBusStudentStatus(classroom, studentId, eventType) {
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
@@ -506,7 +559,6 @@ async function updateBusStudentStatus(classroom, studentId, eventType) {
     }
 }
 
-// Function to display and filter past attendance
 function displayPastAttendance(allReports, searchTerm = '') {
   const listDiv = document.getElementById("past-attendance-list");
   if (!listDiv) return;
@@ -532,7 +584,7 @@ function displayPastAttendance(allReports, searchTerm = '') {
     content.style.display = 'none';
 
     let contentHtml = '';
-    const classrooms = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+    const classrooms = ['classroom1', 'classroom2', 'classroom3', 'busstudents'];
     let shouldDisplay = false;
 
     classrooms.forEach(classroom => {
@@ -589,7 +641,6 @@ function displayPastAttendance(allReports, searchTerm = '') {
   });
 }
 
-// Function to render the Past Attendance page
 function renderPastAttendancePage() {
   contentContainer.innerHTML = `
     <h2>Past Attendance Records</h2>
@@ -620,14 +671,10 @@ function renderPastAttendancePage() {
   });
 }
 
-// Centralized function to update a student's status across all collections
 async function updateStudentStatusBySharedId(sharedId, updateData) {
-    if (!sharedId) {
-        console.error("Shared ID is required to update student status across collections.");
-        return;
-    }
+    if (!sharedId) return;
 
-    const collectionsToSearch = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+    const collectionsToSearch = ['classroom1', 'classroom2', 'classroom3', 'busstudents'];
     
     for (const collectionName of collectionsToSearch) {
         const q = query(collection(db, collectionName), where('sharedId', '==', sharedId));
@@ -693,7 +740,7 @@ async function applySunscreen(classroom, studentId) {
 async function saveAllAsPDF() {
   const { jsPDF } = window.jspdf;
   const doc = new jsPDF();
-  const pages = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+  const pages = ['classroom1', 'classroom2', 'classroom3', 'busstudents'];
   let isFirstPage = true;
   const attendanceDataToSave = {};
 
@@ -781,10 +828,9 @@ async function saveAllAsPDF() {
   alert('All attendance reports saved as one PDF and to attendance history!');
 }
 
-// Reset all data function
 async function resetAllData() {
   if (confirm(`Are you sure you want to reset all attendance data for all classrooms? This cannot be undone.`)) {
-    const collectionsToReset = ['daycare', 'classroom1', 'classroom2', 'classroom3', 'busstudents'];
+    const collectionsToReset = ['classroom1', 'classroom2', 'classroom3', 'busstudents'];
     
     for (const collectionName of collectionsToReset) {
       const studentsRef = collection(db, collectionName);
