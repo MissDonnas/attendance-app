@@ -73,42 +73,66 @@ function showPage(pageName) {
   }
 }
 
+// Helper to normalize sharedId strings (e.g. "magnolia1")
+function normalizeSharedId(sharedId) {
+  if (sharedId === null || sharedId === undefined) return "";
+  return String(sharedId).trim().toLowerCase();
+}
+
 // Helper to compile students across classrooms 1-3 sorted by sharedId
 async function fetchClassroomStudentsSorted() {
   const classroomCollections = ['classroom1', 'classroom2', 'classroom3'];
-  const daycareStudentsMap = new Map();
-  const fullDayStudentsMap = new Map();
+  const allDocs = [];
+  const knownSharedIds = new Set();
 
+  // Pass 1: Fetch all documents and gather every valid sharedId across all classrooms
   for (const collectionName of classroomCollections) {
     const snapshot = await getDocs(collection(db, collectionName));
     snapshot.forEach((docSnap) => {
       const student = docSnap.data();
-      const docId = docSnap.id;
-      const hasSharedId = student.sharedId && String(student.sharedId).trim() !== "";
-      
-      const studentData = {
-        ...student,
-        id: docId,
-        classroom: collectionName
-      };
+      const rawSharedId = student.sharedId;
+      const cleanSharedId = normalizeSharedId(rawSharedId);
 
-      if (hasSharedId) {
-        // Shared ID present -> Daycare Student
-        const key = student.sharedId;
-        if (!daycareStudentsMap.has(key)) {
-          daycareStudentsMap.set(key, studentData);
-        } else {
-          const existing = daycareStudentsMap.get(key);
-          daycareStudentsMap.set(key, { ...existing, ...studentData });
-        }
-      } else {
-        // No Shared ID -> Full Day Student
-        if (!fullDayStudentsMap.has(docId)) {
-          fullDayStudentsMap.set(docId, studentData);
-        }
+      if (cleanSharedId !== "") {
+        knownSharedIds.add(cleanSharedId);
       }
+
+      allDocs.push({
+        ...student,
+        id: docSnap.id,
+        classroom: collectionName,
+        cleanSharedId
+      });
     });
   }
+
+  const daycareStudentsMap = new Map();
+  const fullDayStudentsMap = new Map();
+
+  // Pass 2: Sort into Daycare or Full Day lists
+  allDocs.forEach((studentData) => {
+    const studentNameKey = (studentData.name || '').trim().toLowerCase();
+    
+    // Check if document has a clean sharedId OR if student's name is associated with a known sharedId
+    if (studentData.cleanSharedId !== "") {
+      const key = studentData.cleanSharedId;
+      if (!daycareStudentsMap.has(key)) {
+        daycareStudentsMap.set(key, studentData);
+      } else {
+        const existing = daycareStudentsMap.get(key);
+        daycareStudentsMap.set(key, { ...existing, ...studentData });
+      }
+    } else {
+      // Check if student's doc is missing sharedId, but their sharedId exists in another classroom snapshot
+      const appearsInDaycare = Array.from(daycareStudentsMap.values()).some(
+        d => (d.name || '').trim().toLowerCase() === studentNameKey
+      );
+
+      if (!appearsInDaycare && !fullDayStudentsMap.has(studentData.id)) {
+        fullDayStudentsMap.set(studentData.id, studentData);
+      }
+    }
+  });
 
   const daycareStudents = Array.from(daycareStudentsMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
   const fullDayStudents = Array.from(fullDayStudentsMap.values()).sort((a, b) => (a.name || '').localeCompare(b.name || ''));
@@ -673,17 +697,17 @@ function renderPastAttendancePage() {
 
 async function updateStudentStatusBySharedId(sharedId, updateData) {
     if (!sharedId) return;
+    const cleanId = normalizeSharedId(sharedId);
 
     const collectionsToSearch = ['classroom1', 'classroom2', 'classroom3', 'busstudents'];
     
     for (const collectionName of collectionsToSearch) {
-        const q = query(collection(db, collectionName), where('sharedId', '==', sharedId));
-        const querySnapshot = await getDocs(q);
-
-        querySnapshot.forEach((docSnap) => {
-            if (docSnap.exists()) {
-                updateDoc(doc(db, collectionName, docSnap.id), updateData);
-            }
+        const snapshot = await getDocs(collection(db, collectionName));
+        snapshot.forEach((docSnap) => {
+          const student = docSnap.data();
+          if (normalizeSharedId(student.sharedId) === cleanId) {
+            updateDoc(doc(db, collectionName, docSnap.id), updateData);
+          }
         });
     }
 }
