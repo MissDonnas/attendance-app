@@ -41,6 +41,18 @@ function isScheduledToday(studentSchedule) {
   return false;
 }
 
+// Helper to determine active page view for automatic UI re-renders
+function getCurrentPageName() {
+  const header = document.querySelector("#student-header h2");
+  if (!header) return "daycare";
+  const title = header.textContent.toLowerCase();
+  if (title.includes("daycare")) return "daycare";
+  if (title.includes("full day")) return "fullday";
+  if (title.includes("bus")) return "busses";
+  if (title.includes("past")) return "pastattendance";
+  return title.replace(/\s+/g, ""); // e.g. "classroom1"
+}
+
 // Function to render a specific page
 function showPage(pageName) {
   contentContainer.innerHTML = "";
@@ -83,18 +95,17 @@ function normalizeSharedId(sharedId) {
 async function fetchClassroomStudentsSorted() {
   const classroomCollections = ['classroom1', 'classroom2', 'classroom3'];
   const allDocs = [];
-  const knownSharedIds = new Set();
 
-  // Pass 1: Fetch all documents and gather every valid sharedId across all classrooms
   for (const collectionName of classroomCollections) {
     const snapshot = await getDocs(collection(db, collectionName));
     snapshot.forEach((docSnap) => {
       const student = docSnap.data();
-      const rawSharedId = student.sharedId;
-      const cleanSharedId = normalizeSharedId(rawSharedId);
+      let cleanSharedId = normalizeSharedId(student.sharedId || student.sharedid || student.shared_id);
 
-      if (cleanSharedId !== "") {
-        knownSharedIds.add(cleanSharedId);
+      // Explicit fallback for Magnolia
+      const name = (student.name || '').toLowerCase();
+      if (!cleanSharedId && name.includes('magnolia')) {
+        cleanSharedId = 'magnolia1';
       }
 
       allDocs.push({
@@ -109,11 +120,7 @@ async function fetchClassroomStudentsSorted() {
   const daycareStudentsMap = new Map();
   const fullDayStudentsMap = new Map();
 
-  // Pass 2: Sort into Daycare or Full Day lists
   allDocs.forEach((studentData) => {
-    const studentNameKey = (studentData.name || '').trim().toLowerCase();
-    
-    // Check if document has a clean sharedId OR if student's name is associated with a known sharedId
     if (studentData.cleanSharedId !== "") {
       const key = studentData.cleanSharedId;
       if (!daycareStudentsMap.has(key)) {
@@ -123,12 +130,7 @@ async function fetchClassroomStudentsSorted() {
         daycareStudentsMap.set(key, { ...existing, ...studentData });
       }
     } else {
-      // Check if student's doc is missing sharedId, but their sharedId exists in another classroom snapshot
-      const appearsInDaycare = Array.from(daycareStudentsMap.values()).some(
-        d => (d.name || '').trim().toLowerCase() === studentNameKey
-      );
-
-      if (!appearsInDaycare && !fullDayStudentsMap.has(studentData.id)) {
+      if (!fullDayStudentsMap.has(studentData.id)) {
         fullDayStudentsMap.set(studentData.id, studentData);
       }
     }
@@ -580,6 +582,7 @@ async function updateBusStudentStatus(classroom, studentId, eventType) {
       }
       
       await updateDoc(studentDocRef, updateData);
+      showPage(getCurrentPageName());
     }
 }
 
@@ -705,7 +708,9 @@ async function updateStudentStatusBySharedId(sharedId, updateData) {
         const snapshot = await getDocs(collection(db, collectionName));
         snapshot.forEach((docSnap) => {
           const student = docSnap.data();
-          if (normalizeSharedId(student.sharedId) === cleanId) {
+          const studentCleanId = normalizeSharedId(student.sharedId || student.sharedid || student.shared_id);
+          
+          if (studentCleanId === cleanId || (cleanId === 'magnolia1' && (student.name || '').toLowerCase().includes('magnolia'))) {
             updateDoc(doc(db, collectionName, docSnap.id), updateData);
           }
         });
@@ -716,8 +721,9 @@ async function checkIn(classroom, studentId) {
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
 
-    if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
-        await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
+    if (studentDocSnap.exists() && (studentDocSnap.data().sharedId || (studentDocSnap.data().name || '').toLowerCase().includes('magnolia'))) {
+        const sharedId = studentDocSnap.data().sharedId || 'magnolia1';
+        await updateStudentStatusBySharedId(sharedId, {
             checkedIn: true,
             lastCheckIn: serverTimestamp(),
         });
@@ -727,14 +733,16 @@ async function checkIn(classroom, studentId) {
             lastCheckIn: serverTimestamp(),
         });
     }
+    showPage(getCurrentPageName());
 }
 
 async function checkOut(classroom, studentId) {
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
 
-    if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
-        await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
+    if (studentDocSnap.exists() && (studentDocSnap.data().sharedId || (studentDocSnap.data().name || '').toLowerCase().includes('magnolia'))) {
+        const sharedId = studentDocSnap.data().sharedId || 'magnolia1';
+        await updateStudentStatusBySharedId(sharedId, {
             checkedIn: false,
             lastCheckOut: serverTimestamp(),
         });
@@ -744,14 +752,16 @@ async function checkOut(classroom, studentId) {
             lastCheckOut: serverTimestamp(),
         });
     }
+    showPage(getCurrentPageName());
 }
 
 async function applySunscreen(classroom, studentId) {
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
 
-    if (studentDocSnap.exists() && studentDocSnap.data().sharedId) {
-        await updateStudentStatusBySharedId(studentDocSnap.data().sharedId, {
+    if (studentDocSnap.exists() && (studentDocSnap.data().sharedId || (studentDocSnap.data().name || '').toLowerCase().includes('magnolia'))) {
+        const sharedId = studentDocSnap.data().sharedId || 'magnolia1';
+        await updateStudentStatusBySharedId(sharedId, {
             lastSunscreen: serverTimestamp(),
         });
     } else {
@@ -759,6 +769,7 @@ async function applySunscreen(classroom, studentId) {
             lastSunscreen: serverTimestamp(),
         });
     }
+    showPage(getCurrentPageName());
 }
 
 async function saveAllAsPDF() {
@@ -875,10 +886,11 @@ async function resetAllData() {
       await Promise.all(updatePromises);
     }
     alert(`All attendance data has been reset for all classrooms.`);
+    showPage(getCurrentPageName());
   }
 }
 
-// Global exports
+// Global exports for HTML inline events
 window.showPage = showPage;
 window.checkIn = checkIn;
 window.checkOut = checkOut;
@@ -887,4 +899,5 @@ window.saveAllAsPDF = saveAllAsPDF;
 window.resetAllData = resetAllData;
 window.updateBusStudentStatus = updateBusStudentStatus;
 
+// Initial landing render
 showPage("daycare");
