@@ -53,6 +53,41 @@ function getCurrentPageName() {
   return title.replace(/\s+/g, ""); // e.g. "classroom1"
 }
 
+// Optimistic UI updates
+function updateCardUIOptimistically(buttonElem, newStatus, statusClass) {
+  const card = buttonElem ? buttonElem.closest('.student-card') : null;
+  if (!card) return;
+
+  const badge = card.querySelector('.status-badge');
+  if (badge) {
+    badge.textContent = newStatus;
+    badge.className = `status-badge ${statusClass}`;
+  }
+
+  const nowString = new Date().toLocaleTimeString();
+  const info = card.querySelector('.student-info');
+  if (info) {
+    if (newStatus === 'Present') {
+      const p = info.querySelectorAll('p')[0];
+      if (p) p.textContent = `Last Check In: ${nowString}`;
+    } else if (newStatus === 'Checked Out') {
+      const p = info.querySelectorAll('p')[1];
+      if (p) p.textContent = `Last Check Out: ${nowString}`;
+    }
+  }
+}
+
+function updateSunscreenUIOptimistically(buttonElem) {
+  const card = buttonElem ? buttonElem.closest('.student-card') : null;
+  if (!card) return;
+  const nowString = new Date().toLocaleTimeString();
+  const info = card.querySelector('.student-info');
+  if (info) {
+    const p = info.querySelectorAll('p')[2];
+    if (p) p.textContent = `Last Sunscreen: ${nowString}`;
+  }
+}
+
 // Function to render a specific page
 function showPage(pageName) {
   contentContainer.innerHTML = "";
@@ -102,7 +137,6 @@ async function fetchClassroomStudentsSorted() {
       const student = docSnap.data();
       let cleanSharedId = normalizeSharedId(student.sharedId || student.sharedid || student.shared_id);
 
-      // Explicit fallback for Magnolia
       const name = (student.name || '').toLowerCase();
       if (!cleanSharedId && name.includes('magnolia')) {
         cleanSharedId = 'magnolia1';
@@ -221,7 +255,7 @@ async function renderFullDayPage() {
   }
 }
 
-// Function to render standard classroom pages (classroom1, classroom2, classroom3)
+// Function to render standard classroom pages
 function renderClassroomPage(classroom) {
   const today = new Date();
   const dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
@@ -718,6 +752,10 @@ async function updateStudentStatusBySharedId(sharedId, updateData) {
 }
 
 async function checkIn(classroom, studentId) {
+    if (window.event && window.event.target) {
+      updateCardUIOptimistically(window.event.target, 'Present', 'checked-in');
+    }
+
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
 
@@ -737,6 +775,10 @@ async function checkIn(classroom, studentId) {
 }
 
 async function checkOut(classroom, studentId) {
+    if (window.event && window.event.target) {
+      updateCardUIOptimistically(window.event.target, 'Checked Out', 'checked-out');
+    }
+
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
 
@@ -756,6 +798,10 @@ async function checkOut(classroom, studentId) {
 }
 
 async function applySunscreen(classroom, studentId) {
+    if (window.event && window.event.target) {
+      updateSunscreenUIOptimistically(window.event.target);
+    }
+
     const studentDocRef = doc(db, classroom, studentId);
     const studentDocSnap = await getDoc(studentDocRef);
 
